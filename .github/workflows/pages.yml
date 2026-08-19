@@ -1,9 +1,24 @@
 name: Deploy Pages
 
+# The site is the landing page in this repository plus the documentation
+# in telecraft-dev/telecraft. Three things start a build:
+#
+#   push                 a change to this repository's own main
+#   workflow_dispatch    a manual run, from the Actions tab
+#   repository_dispatch  telecraft-dev/telecraft saying documentation
+#                        landed on its main (event type docs-updated)
+#
+# The documentation is always taken from telecraft's main. The dispatch
+# payload is attacker-controllable: it never reaches a `ref:` and never
+# reaches a `run:` script. It is read once, through `env`, to print which
+# commit asked for the build.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  repository_dispatch:
+    types: [docs-updated]
 
 permissions:
   contents: read
@@ -15,16 +30,71 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say what asked for this build
+        env:
+          TRIGGER: ${{ github.event_name }}
+          DOCS_SHA: ${{ github.event.client_payload.sha }}
+          DOCS_REF: ${{ github.event.client_payload.ref }}
+        run: |
+          set -euo pipefail
+          printf 'triggered by: %s\n' "$TRIGGER"
+          printf 'documentation commit reported by the sender: %s (%s)\n' \
+            "${DOCS_SHA:-none}" "${DOCS_REF:-none}"
+          printf 'the build itself always reads telecraft main.\n'
+
+      - name: Check out telecraft.dev
+        uses: actions/checkout@v4
+
+      # The documentation source. Always main, never a ref from the
+      # dispatch payload. Only docs/ is fetched.
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@v4
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Record the documentation commit that was actually built
+        working-directory: telecraft
+        run: |
+          set -euo pipefail
+          git log -1 --format='built from telecraft %H (%ci)'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Build the site
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Check that the site makes no external requests
+        run: npm run check:external
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
   deploy:
+    name: Deploy to Pages
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

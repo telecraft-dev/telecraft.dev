@@ -1,0 +1,5 @@
+node_modules/
+_site/
+
+# Where the build expects a checkout of telecraft-dev/telecraft.
+/telecraft/

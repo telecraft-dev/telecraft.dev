@@ -1,0 +1,24 @@
+{
+  "name": "telecraft.dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The telecraft.dev website: landing page plus the documentation site built from telecraft-dev/telecraft",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:external": "node scripts/check-no-external.mjs _site",
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "highlight.js": "11.11.1",
+    "markdown-it": "14.3.0",
+    "markdown-it-anchor": "9.2.0",
+    "markdown-it-deflist": "3.0.0",
+    "yaml": "2.9.0"
+  }
+}
