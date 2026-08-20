@@ -1,0 +1,73 @@
+{
+  "$comment": [
+    "The design system is authored in telecraft-dev/telecraft and copied here.",
+    "ADR-0047's consequences call this dependency 'a versioned release, not a",
+    "copy'. The scheme now exists — telecraft ADR-0049 defines vMAJOR.MINOR.PATCH",
+    "tags and ships the design system as an archive — but no tag has been cut,",
+    "so there is still nothing to depend on. Point `ref` at the release tag the",
+    "moment one exists (telecraft-dev/telecraft#86). Until then these are",
+    "copies with their provenance written down and a check that fails when they",
+    "drift. That is the honest description of them, and calling them anything",
+    "else would be false.",
+    "",
+    "`ref` is what the copies were taken from and `commit` is what that ref",
+    "resolved to, because a branch moves and a commit does not. While `ref`",
+    "names anything other than main, `tools/vendor.mjs check` reports the",
+    "difference against main instead of failing on it: a copy of an unmerged",
+    "branch is supposed to differ from main. Point `ref` back at main — or at",
+    "whatever #86 decides — the moment the source lands, and drift is fatal",
+    "again."
+  ],
+  "repository": "telecraft-dev/telecraft",
+  "raw": "https://raw.githubusercontent.com/telecraft-dev/telecraft",
+  "ref": "main",
+  "commit": "76be0dedfd87232fa9195e0541a387f020b60ade",
+  "interim": "telecraft-dev/telecraft#93 is open and unmerged; the tagging scheme this should become is telecraft-dev/telecraft#86",
+  "files": [
+    {
+      "from": "console/src/tokens.css",
+      "to": "assets/tokens.css",
+      "sha256": "3d500864139638648d0906bdc824336375a7ba36509d328fbe4e678f1b16a6e5"
+    },
+    {
+      "from": "console/src/base.css",
+      "to": "assets/base.css",
+      "sha256": "7890a2300dfe8056a6cb3018bf0670a7d41f84bf015663bdaa7ff6fc2d075a85"
+    },
+    {
+      "from": "console/src/fonts/fonts.css",
+      "to": "assets/fonts/fonts.css",
+      "sha256": "2deb44d0971f57a155723eaa4b46f1fbc4a1828498de9f0565551e33e8507469"
+    },
+    {
+      "from": "console/src/fonts/AtkinsonHyperlegibleNext.woff2",
+      "to": "assets/fonts/AtkinsonHyperlegibleNext.woff2",
+      "sha256": "fd746eecca2c2460de29b9a16b83ba4d3ac73f48cae590a6fe55b3c854bcf136"
+    },
+    {
+      "from": "console/src/fonts/AtkinsonHyperlegibleNext-Italic.woff2",
+      "to": "assets/fonts/AtkinsonHyperlegibleNext-Italic.woff2",
+      "sha256": "0d9d3efccb20d92669631b218e43721640ffe3c976ebd36a228d63a1814886b1"
+    },
+    {
+      "from": "console/src/fonts/JetBrainsMono.woff2",
+      "to": "assets/fonts/JetBrainsMono.woff2",
+      "sha256": "3ee0b305b84a2cf8a64d67cc433bce88c07030a382d442090436c4842c48d5b8"
+    },
+    {
+      "from": "console/src/fonts/AtkinsonHyperlegibleNext-OFL.txt",
+      "to": "assets/fonts/AtkinsonHyperlegibleNext-OFL.txt",
+      "sha256": "aca6a428580965d2297d1b718042dd427c2a9443ece3b0d02d758e161e0c4030"
+    },
+    {
+      "from": "console/src/fonts/JetBrainsMono-OFL.txt",
+      "to": "assets/fonts/JetBrainsMono-OFL.txt",
+      "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+    },
+    {
+      "from": "console/public/favicon.svg",
+      "to": "favicon.svg",
+      "sha256": "d3451d4e6164fb28204968a945b2298a06cf46e5fe84b4f99f7171e376d51479"
+    }
+  ]
+}
