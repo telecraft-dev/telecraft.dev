@@ -1,9 +1,30 @@
 name: Deploy Pages
 
+# The site is the landing page in this repository plus the documentation
+# in telecraft-dev/telecraft. Three things start a build:
+#
+#   push                 a change to this repository's own main
+#   workflow_dispatch    a manual run, from the Actions tab
+#   repository_dispatch  telecraft-dev/telecraft saying documentation
+#                        landed on its main (event type docs-updated)
+#
+# The documentation is always taken from telecraft's main. The dispatch
+# payload is attacker-controllable: it never reaches a `ref:` and never
+# reaches a `run:` script. It is read once, through `env`, to print which
+# commit asked for the build.
+#
+# Both of the rules in `checks.yml` are checked again here, and deliberately
+# not by reusing that workflow. `checks.yml` guards this repository on a pull
+# request; this job guards a deploy, and a deploy carries pages written in
+# another repository that no pull request here ever saw. Two different things
+# are being proved about two different trees.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  repository_dispatch:
+    types: [docs-updated]
 
 permissions:
   contents: read
@@ -15,16 +36,83 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say what asked for this build
+        env:
+          TRIGGER: ${{ github.event_name }}
+          DOCS_SHA: ${{ github.event.client_payload.sha }}
+          DOCS_REF: ${{ github.event.client_payload.ref }}
+        run: |
+          set -euo pipefail
+          printf 'triggered by: %s\n' "$TRIGGER"
+          printf 'documentation commit reported by the sender: %s (%s)\n' \
+            "${DOCS_SHA:-none}" "${DOCS_REF:-none}"
+          printf 'the build itself always reads telecraft main.\n'
+
+      - name: Check out telecraft.dev
+        uses: actions/checkout@v4
+
+      # The documentation source. Always main, never a ref from the
+      # dispatch payload. Only docs/ is fetched.
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@v4
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Record the documentation commit that was actually built
+        working-directory: telecraft
+        run: |
+          set -euo pipefail
+          git log -1 --format='built from telecraft %H (%ci)'
+
+      # The same version `checks.yml` runs. `package.json` still says Node 20
+      # or later and means it, but the two workflows agreeing is what stops a
+      # runtime difference from being discovered by a deploy.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # Before anything is built, because a deploy that ships a design system
+      # nobody can trace is worse than a deploy that does not happen. Needs no
+      # dependencies, so it runs ahead of `npm ci`.
+      - name: The vendored design system matches its source
+        run: node tools/vendor.mjs check
+
+      - run: npm ci
+
+      - run: npm test
+
+      # `npm run build` runs the zero-CDN check over `_site/` as its last
+      # step, so the site cannot be built at all if a documentation page
+      # arrives carrying a remote sub-resource.
+      - name: Build the site
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Nothing the built site fetches comes from another origin
+        run: npm run check:external
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
   deploy:
+    name: Deploy to Pages
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

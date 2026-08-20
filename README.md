@@ -1,22 +1,89 @@
 # telecraft.dev
 
-The Telecraft front door. One hand-written page, no build step, deployed to
-GitHub Pages by `.github/workflows/pages.yml` on every push to `main`.
+The Telecraft front door and the documentation site behind it, at
+<https://telecraft.dev>. The landing page is written here; the
+documentation is not.
+
+## Where the content comes from
+
+Two places, and only one of them is this repository.
+
+Landing page
+: `index.html` here. Hand written, self-contained, no build step of its
+  own. The build copies it to the root of the site.
+
+Documentation
+: `docs/` in [telecraft-dev/telecraft](https://github.com/telecraft-dev/telecraft),
+  published under `/docs`. Nothing in this repository decides what the
+  documentation says or how it is organised.
+
+`docs/nav.yaml` in telecraft is the contract between the two. It names
+the sections, the pages published outside a section, and the
+`not_published` list of working material that must never reach the site.
+The build derives the whole navigation from that file and from each
+page's YAML front matter, so there is no second copy of the navigation
+here: change `nav.yaml` and the site changes.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `index.html` | The page. Content and structure |
-| `assets/site.css` | This site's structure. **The only stylesheet here that is ours to edit** |
+| `index.html` | The landing page. Content and structure |
+| `assets/site.css` | The landing page's structure |
+| `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
 | `assets/tokens.css` | Vendored. Values only, no selectors |
 | `assets/base.css` | Vendored. The element layer: typography, links, code, tables, controls, focus rings |
 | `assets/fonts/` | Vendored. Two families, three faces, subset and self-hosted, with their licences |
 | `favicon.svg` | Vendored. The product's mark |
+| `scripts/build.mjs` | The build. Reads a checkout of telecraft's `docs/`, writes `_site/` |
+| `scripts/lib/` | Navigation model, Markdown rendering, front matter, page shell |
+| `scripts/serve.mjs` | Serves `_site/` for a local look |
 | `tools/vendored.json` | Where every vendored file came from |
 | `tools/vendor.mjs` | Fetch the vendored files, and prove they have not drifted |
 | `tools/check-external-assets.mjs` | Nothing the browser fetches comes from another origin |
+
+`assets/site.css` and `assets/docs.css` are the two stylesheets here that
+are ours to edit. Both are structure over the vendored element layer, and
+neither invents a colour.
+
+## How the build works
+
+`scripts/build.mjs` reads a checkout of `docs/`, renders every Markdown
+page to static HTML, and writes the result to `_site/`: the landing page
+and the assets at the root, the documentation under `/docs`.
+
+- Markdown is rendered with [markdown-it](https://github.com/markdown-it/markdown-it),
+  with tables, description lists, and heading anchors. Fenced code is
+  highlighted at build time by [highlight.js](https://highlightjs.org/),
+  so no highlighting runs in the browser.
+- Relative links between pages are rewritten to the URL the target page
+  is published at: a link to `../guides/quickstart.md` becomes
+  `../guides/quickstart.html`. A link into the `not_published` working
+  corpus becomes a link to that file on GitHub, which is where it reads
+  best.
+- `not_published` is enforced, not assumed. If a denied path ever
+  reaches the output, the build fails.
+- `terminology.html` is a finished, self-contained document, so it is
+  copied through byte for byte.
+- The site makes no external requests, and the build proves it: the last
+  thing `npm run build` does is run `tools/check-external-assets.mjs`
+  over `_site/`.
+
+Pages that `nav.yaml` lists but that have not landed in telecraft yet
+produce a warning rather than a failure, so a documentation change still
+in review cannot take the site down. Run the build with `--strict` to
+turn those warnings into errors. A missing `nav.yaml` warns too, and
+publishes the landing page alone rather than nothing.
+
+## Both pages are the same site
+
+The landing page and every documentation page carry the same `<head>`:
+the pre-paint theme resolver, the mark, the font preload, and the
+stylesheets in the order `fonts.css`, `tokens.css`, `base.css`, then the
+page's own sheet. `scripts/lib/layout.mjs` emits that shell for the
+documentation; `index.html` carries it by hand. They agree by
+convention — change one and change the other.
 
 ## The design system is vendored, and that is interim
 
@@ -55,35 +122,92 @@ branch is meant to differ from `main`. **Point `ref` at `main` and rerun
 - **Nothing is fetched from another origin** (ADR-0019, ADR-0045 §5). No font
   CDN, no hosted stylesheet, no analytics tag. `tools/check-external-assets.mjs`
   fails on any external sub-resource; a hyperlink is not a sub-resource, so
-  `<a href>` may point wherever it likes.
+  `<a href>` may point wherever it likes. It runs over the source tree in CI
+  and over `_site/` at the end of every build.
 - **Every colour is defined in exactly two blocks, never inside a media query**
   (ADR-0047 §2). That is a property of `tokens.css`, which is not edited here.
-  A colour invented in `site.css` would break it, so `site.css` invents none.
+  A colour invented in `site.css` or `docs.css` would break it, so neither
+  invents one.
 - **Hue is never load-bearing** (ADR-0047 §5). No signal-lane colour appears on
   this site at all. The brand amber is the only colour with a job, and
-  ADR-0047 §4 confines it to marketing surfaces, of which this is the one.
+  ADR-0047 §4 confines it to marketing surfaces, of which the landing page is
+  the one.
 - **Three theme states, resolved before the first paint.** `system`, `light`,
-  `dark`. The inline block in `index.html` stamps the resolution before
-  anything is painted; `assets/theme.js` owns every later one. They share the
-  storage key `telecraft.theme` and agree by convention — change one and change
-  the other. Without script the page still renders a complete theme, because
-  the bare `:root` in `tokens.css` carries dark.
+  `dark`. The inline block in `index.html`, and its twin in
+  `scripts/lib/layout.mjs`, stamp the resolution before anything is painted;
+  `assets/theme.js` owns every later one. They share the storage key
+  `telecraft.theme` and agree by convention — change one and change the
+  other. Without script a page still renders a complete theme, because the
+  bare `:root` in `tokens.css` carries dark.
 
 ## Working on it
 
-There is nothing to install and nothing to build. Serve the directory and open
-it:
+You need Node.js 20 or later.
+
+1. Clone this repository and install the dependencies.
+
+   ```sh
+   git clone https://github.com/telecraft-dev/telecraft.dev.git
+   cd telecraft.dev
+   npm ci
+   ```
+
+2. Get a copy of the documentation. The build looks for `telecraft/docs`
+   by default, and that path is git-ignored.
+
+   ```sh
+   git clone --depth 1 https://github.com/telecraft-dev/telecraft.git telecraft
+   ```
+
+3. Build the site, then look at it.
+
+   ```sh
+   npm run build
+   npm run serve      # http://localhost:4321
+   ```
+
+To build from a checkout somewhere else, pass `--docs`:
 
 ```sh
-python3 -m http.server 8000
+npm run build -- --docs ../telecraft/docs
 ```
 
-Both checks are plain Node scripts and need no dependencies:
+| Command | What it does |
+|---|---|
+| `npm run build` | Builds `_site/`, including the external-asset check |
+| `npm run build -- --strict` | Fails the build on any warning |
+| `npm run check:external` | Runs the external-asset check on `_site/` on its own |
+| `npm run check:vendored` | Proves the vendored copies have not drifted |
+| `npm run serve` | Serves `_site/` on <http://localhost:4321> |
+| `npm test` | Builds a fixture documentation tree and asserts what the build promises |
+
+Both `tools/` scripts are plain Node and need no dependencies, so they run
+against a bare checkout too:
 
 ```sh
 node tools/check-external-assets.mjs
 node tools/vendor.mjs check
 ```
+
+## How it deploys
+
+`.github/workflows/pages.yml` builds the site and deploys it to GitHub
+Pages. Three things start it:
+
+- a push to this repository's `main`,
+- a manual run from the **Actions** tab (`workflow_dispatch`),
+- a `repository_dispatch` of type `docs-updated`, which
+  telecraft-dev/telecraft sends when a documentation change lands on its
+  `main`.
+
+Whatever starts the build, the documentation always comes from
+telecraft's `main`. The dispatch payload is input from another
+repository, so the workflow never uses it to choose a ref and never
+passes it to a shell script. It reads it once, through `env`, to log
+which commit asked for the build.
+
+`.github/workflows/checks.yml` runs the same rules on every pull request
+and weekly, and deploys nothing.
 
 ## Licence
 

@@ -1,0 +1,41 @@
+# A miniature of the real docs/nav.yaml in telecraft-dev/telecraft, kept
+# small enough to assert against. The shape is the contract; the content
+# is invented.
+site:
+  title: Fixture documentation
+  description: A fixture site.
+  base_path: /docs
+  repository: https://example.invalid/org/repo
+  edit_path: docs
+
+sections:
+  - id: concepts
+    title: Concepts
+    path: concepts
+    audience: public
+    summary: >-
+      The model.
+  - id: guides
+    title: Guides
+    path: guides
+    audience: public
+    summary: >-
+      Task-oriented instructions.
+
+pages:
+  - path: index.md
+    title: Fixture documentation
+    order: 0
+  - path: glossary.md
+    title: Glossary
+    section: concepts
+    order: 100
+  - path: standalone.html
+    title: Standalone page
+    section: concepts
+    order: 101
+    format: html
+
+not_published:
+  - adr
+  - secret.md
