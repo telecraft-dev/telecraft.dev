@@ -13,7 +13,7 @@
     "check:external": "node tools/check-external-assets.mjs _site",
     "check:vendored": "node tools/vendor.mjs check",
     "serve": "node scripts/serve.mjs",
-    "test": "node --test test/"
+    "test": "node --test"
   },
   "dependencies": {
     "highlight.js": "11.11.1",

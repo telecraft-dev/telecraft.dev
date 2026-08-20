@@ -73,9 +73,12 @@ jobs:
           set -euo pipefail
           git log -1 --format='built from telecraft %H (%ci)'
 
+      # The same version `checks.yml` runs. `package.json` still says Node 20
+      # or later and means it, but the two workflows agreeing is what stops a
+      # runtime difference from being discovered by a deploy.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       # Before anything is built, because a deploy that ships a design system
