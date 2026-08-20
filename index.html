@@ -5,108 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Telecraft — coming soon</title>
 <meta name="description" content="Craft, govern, and verify OpenTelemetry across your whole estate. Open-source fleet and policy management for OpenTelemetry — coming soon.">
-<style>
-:root {
-  --bg: #f7f5f0;
-  --grid: rgba(31, 58, 95, 0.07);
-  --grid-major: rgba(31, 58, 95, 0.13);
-  --ink: #1c2733;
-  --muted: #5d6b7a;
-  --accent: #0f6b5c;
-  --pulse: #0f6b5c;
-  --card-line: rgba(31, 58, 95, 0.25);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1a2b;
-    --grid: rgba(140, 180, 220, 0.08);
-    --grid-major: rgba(140, 180, 220, 0.16);
-    --ink: #e8eef4;
-    --muted: #8fa3b8;
-    --accent: #4fd1b5;
-    --pulse: #4fd1b5;
-    --card-line: rgba(140, 180, 220, 0.35);
-  }
-}
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  color: var(--ink);
-  background-color: var(--bg);
-  background-image:
-    linear-gradient(var(--grid-major) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
-  display: grid;
-  place-items: center;
-  padding: 2rem;
-}
-main { max-width: 40rem; text-align: center; }
-.mark {
-  font-size: clamp(2.6rem, 9vw, 4.4rem);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 0;
-}
-.mark .tele { color: var(--accent); }
-.pulse { display: block; width: min(28rem, 80vw); margin: 1.1rem auto 1.6rem; }
-.pulse polyline {
-  fill: none;
-  stroke: var(--pulse);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 640;
-  stroke-dashoffset: 640;
-  animation: draw 3.2s ease-out forwards, hum 6s 3.2s ease-in-out infinite alternate;
-}
-@keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes hum { from { opacity: 1; } to { opacity: 0.55; } }
-.tagline {
-  font-size: clamp(1.02rem, 2.6vw, 1.25rem);
-  line-height: 1.6;
-  color: var(--muted);
-  margin: 0 auto 2.2rem;
-  max-width: 34rem;
-}
-.soon {
-  display: inline-block;
-  font-size: 0.8rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--accent);
-  border: 1px solid var(--card-line);
-  border-radius: 999px;
-  padding: 0.5rem 1.3rem;
-  margin-bottom: 2.4rem;
-}
-.links { font-size: 0.95rem; }
-.links a {
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1px solid var(--card-line);
-  padding-bottom: 0.1rem;
-}
-.links a:hover { color: var(--accent); border-color: var(--accent); }
-footer {
-  margin-top: 3.2rem;
-  font-size: 0.78rem;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pulse polyline { animation: none; stroke-dashoffset: 0; }
-}
-</style>
+<!-- The theme, resolved before the first paint. `tokens.css` carries dark on
+     the bare :root so an unstamped document is still complete, which means a
+     reader who chose light would otherwise see one dark frame. This is the
+     only copy of the resolver that runs that early; `assets/theme.js` owns
+     every later resolution and the two share the storage key. The console's
+     `index.html` carries the same block for the same reason. -->
+<script>
+  ;(function () {
+    try {
+      var stored = localStorage.getItem('telecraft.theme')
+      var choice = stored === 'light' || stored === 'dark' ? stored : 'system'
+      document.documentElement.dataset.theme =
+        choice === 'system'
+          ? matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark'
+          : choice
+    } catch (error) {
+      document.documentElement.dataset.theme = 'dark'
+    }
+  })()
+</script>
+<!-- The product's own mark: the card face's three reading bands, stacked and
+     decreasing (identity.md). Naming it here also stops the browser's default
+     /favicon.ico request, which a static host answers with a 404. -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<!-- Self-hosted, like everything else (ADR-0019, ADR-0045 §5). The upright is
+     the only face the first paint needs; the italic is unused on this page and
+     the mono carries three words, so neither is worth a preload. -->
+<link rel="preload" href="/assets/fonts/AtkinsonHyperlegibleNext.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Faces, then values, then elements, then structure. The first three are
+     copies of the console's, listed in `tools/vendored.json`. -->
+<link rel="stylesheet" href="/assets/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/theme.js" defer></script>
 </head>
 <body>
 <main>
-  <h1 class="mark"><span class="tele">Tele</span>craft</h1>
+  <h1 class="wordmark"><span class="wordmark-lead">Tele</span>craft</h1>
   <svg class="pulse" viewBox="0 0 560 60" role="img" aria-label="telemetry pulse line">
     <polyline points="0,30 120,30 150,30 165,12 180,48 195,20 210,38 225,30 300,30 330,30 345,8 360,52 375,30 470,30 560,30"/>
   </svg>
@@ -117,7 +56,20 @@ footer {
   <p class="links">
     <a href="https://github.com/telecraft-dev/telecraft">Follow the build on GitHub&nbsp;→</a>
   </p>
-  <footer>Apache-2.0 · © 2026 the Telecraft project</footer>
+  <footer class="foot">
+    <p class="colophon">Apache-2.0 · © 2026 the Telecraft project</p>
+    <!-- Unhidden by `assets/theme.js`: a control that cannot act is worse
+         than no control, and without script the page still resolves to a
+         complete theme from the bare :root block. -->
+    <label class="theme-control" hidden>
+      <span>Theme</span>
+      <select id="theme-choice">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  </footer>
 </main>
 </body>
 </html>

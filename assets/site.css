@@ -1,0 +1,208 @@
+/*
+ * telecraft.dev, structure only. Every value comes from `tokens.css` and
+ * every bare element is already dressed by `base.css`, both of which are
+ * copies of the console's (see `tools/vendored.json`). This is the only
+ * stylesheet in this repository that is ours to edit.
+ *
+ * Two rules bind it. Nothing is fetched from another origin, ever
+ * (ADR-0019, ADR-0045 §5) — `tools/check-external-assets.mjs` fails the
+ * build if it is. And hue is never load-bearing (ADR-0047 §5): no signal
+ * colour appears here at all, which is the simplest way to keep the rule
+ * on a page with no data on it. The only colour with a job is the brand
+ * amber, which ADR-0047 §4 confines to exactly this surface.
+ */
+
+/* ---- The page ----
+   Blueprint linework, which is the identity's own reference
+   (docs/branding/identity.md: datum lines and hairlines, calipers,
+   Blueprints as a domain object). The two rule tokens draw it, so the grid
+   follows the theme without naming a colour of its own, and the spacing is
+   the space scale rather than two numbers picked by eye. */
+
+:root {
+  --grid-minor: var(--space-5);
+  --grid-major: calc(var(--space-5) * 5);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  /* `background-image` and not the `background` shorthand: `base.css` has
+     already set the ground to --colour-bg and the shorthand would drop it. */
+  background-image:
+    linear-gradient(var(--colour-rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--colour-rule) 1px, transparent 1px),
+    linear-gradient(var(--colour-rule-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--colour-rule-soft) 1px, transparent 1px);
+  background-size:
+    var(--grid-major) var(--grid-major),
+    var(--grid-major) var(--grid-major),
+    var(--grid-minor) var(--grid-minor),
+    var(--grid-minor) var(--grid-minor);
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+}
+
+main {
+  max-width: 40rem;
+  text-align: center;
+}
+
+/* ---- The wordmark ----
+   Wordmark-first: the mark supports the word and does not replace it
+   (identity.md). `.wordmark` rather than `.mark`, which in this design
+   system means a drawn state mark and nothing else.
+
+   The size is a clamp rather than a scale step because the scale stops at
+   22px — it was cut for interface text, and a display line is not interface
+   text. Adding a display step to `tokens.css` would be a change to the
+   shared token layer and belongs upstream, not here. */
+
+.wordmark {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 4.4rem);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.wordmark-lead {
+  color: var(--brand);
+}
+
+/* ---- The pulse ----
+   A telemetry-signal motif, which identity.md holds from the naming
+   decision. It carries no state and no reading, so it is safe ground for
+   the brand amber: there is nothing here for a hue to be load-bearing
+   about.
+
+   The draw is left at the duration it was authored with. `--motion-fast`
+   and `--motion-base` are transition durations — 90ms and 160ms — and a
+   line that draws itself over three seconds is not a transition. */
+
+.pulse {
+  display: block;
+  width: min(28rem, 80vw);
+  margin: var(--space-4) auto var(--space-5);
+}
+
+.pulse polyline {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 640;
+  stroke-dashoffset: 640;
+  animation:
+    draw 3.2s ease-out forwards,
+    hum 6s 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hum {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.55;
+  }
+}
+
+/* `base.css` already collapses every animation under reduced motion, but
+   collapsing this one is not enough: the line's resting state is undrawn,
+   so it has to be told to finish rather than told to stop. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse polyline {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- The words ---- */
+
+.tagline {
+  margin: 0 auto var(--space-6);
+  max-width: 34rem;
+  font-size: clamp(var(--text-base), 2.6vw, var(--text-l));
+  color: var(--colour-text-muted);
+}
+
+/* A plate, not a pill: the largest radius in the system is 8px because the
+   identity is datum lines and hairlines (design-system.md, "Space, radius,
+   focus, motion, elevation"). Set in the mono face, which is the only place
+   the second family appears on this page — a stamp reads as an instrument's
+   stamp, and the words are a status rather than prose. */
+.soon {
+  display: inline-block;
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--colour-text-muted);
+}
+
+/* The underline comes from `base.css`, which says a surface that wants its
+   rule further from the descenders sets the offset itself. Atkinson draws
+   long descenders, so this surface does. */
+.links {
+  margin: 0;
+  font-size: var(--text-m);
+}
+
+.links a {
+  text-underline-offset: 0.2em;
+}
+
+.links a:hover {
+  color: var(--brand);
+}
+
+/* ---- The foot ----
+   The colophon and the theme control on one line, wrapping to two when
+   there is no room, because neither is worth truncating. */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-6);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+}
+
+.colophon {
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+/* The same shape as the console's chrome control (`.lens-control`): a word
+   and a select, so the two surfaces offer the same three states in the same
+   form. It is `hidden` in the markup and unhidden by `theme.js`, because a
+   control that cannot act is worse than no control, and without script the
+   page still resolves to a complete theme from the bare `:root` block. */
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.theme-control select {
+  font: inherit;
+}

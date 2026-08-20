@@ -1,0 +1,40 @@
+name: Checks
+
+# Two rules this site cannot break quietly.
+#
+# The air gap (ADR-0019, ADR-0045 §5): nothing the browser fetches comes from
+# another origin. The console checks this over its built bundle; here there is
+# no build, so the check reads the repository.
+#
+# The vendored design system: the tokens, the base sheet and the faces are
+# authored in telecraft-dev/telecraft and copied here, because ADR-0047 asked
+# for a versioned artefact and there is no versioning scheme yet
+# (telecraft-dev/telecraft#86). A copy that nobody checks becomes a fork by
+# accident, so the schedule exists as much as the pull-request trigger: drift
+# happens upstream, on a day when nothing changed here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays, early. A week of drift is a week, not a release cycle.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Air gap and vendored design system
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Nothing is fetched from another origin
+        run: node tools/check-external-assets.mjs
+      - name: The vendored design system matches its source
+        run: node tools/vendor.mjs check
