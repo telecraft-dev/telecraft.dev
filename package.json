@@ -2,9 +2,9 @@
   "name": "telecraft.dev",
   "version": "1.0.0",
   "private": true,
-  "description": "The telecraft.dev website: landing page plus the documentation site built from telecraft-dev/telecraft",
+  "description": "telecraft.dev: the landing page, and the documentation site built from telecraft-dev/telecraft",
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "engines": {
     "node": ">=20"
   },

@@ -1,341 +1,648 @@
-/* Documentation styles for telecraft.dev.
+/*
+ * The documentation pages, structure only. The fourth sheet in the load
+ * order `fonts.css`, `tokens.css`, `base.css`, then this — the same order
+ * `index.html` uses, with `site.css` in this slot. Two structures over one
+ * set of elements, which is the whole reason ADR-0047 §1 chose a stylesheet
+ * over a component library: a React component cannot cross into this
+ * repository and a stylesheet can.
  *
- * The palette, the typeface stack, and the light and dark handling are
- * the landing page's, extended with what a documentation page needs:
- * a section sidebar, a page table of contents, a readable measure, and
- * code blocks highlighted at build time.
+ * Every value here comes from `tokens.css` and every bare element is
+ * already dressed by `base.css`, both of them copies of the console's (see
+ * `tools/vendored.json`). What is left is what a documentation page needs
+ * and the element layer deliberately withholds: a section sidebar, a page
+ * table of contents, a readable measure, code blocks, and the block rhythm
+ * and heading scale that `base.css` leaves to each surface because a
+ * console panel and a prose column do not want the same ones.
  *
- * No external requests: no web fonts, no CDN, no analytics. */
+ * Two rules bind it, as they bind `site.css`.
+ *
+ * NOTHING NAMES A COLOUR. Every colour in the system is defined in exactly
+ * two blocks and never inside a media query (ADR-0047 §2); a colour minted
+ * here — or worse, minted here behind `prefers-color-scheme` — would be
+ * stranded in the unresolved state and would fork the palette besides. So
+ * there is no `:root` colour block below and no colour inside the one media
+ * query there is.
+ *
+ * NOTHING IS FETCHED FROM ANOTHER ORIGIN (ADR-0019, ADR-0045 §5).
+ * `tools/check-external-assets.mjs` fails the build if it ever is.
+ */
+
+/* ---- The page ----
+   The same blueprint linework as the front door (`site.css`, and
+   docs/branding/identity.md: datum lines and hairlines, calipers,
+   Blueprints as a domain object), drawn by the same two rule tokens at the
+   same spacing. The prose sits on a surface above it, so on a documentation
+   page the grid reads in the gutters — which is where a drawing's grid
+   reads anyway. */
 
 :root {
-  --bg: #f7f5f0;
-  --surface: #fffefb;
-  --grid: rgba(31, 58, 95, 0.07);
-  --grid-major: rgba(31, 58, 95, 0.13);
-  --ink: #1c2733;
-  --muted: #5d6b7a;
-  --accent: #0f6b5c;
-  --accent-soft: #e3f0ed;
-  --card-line: rgba(31, 58, 95, 0.25);
-  --hairline: rgba(31, 58, 95, 0.14);
-  --code-bg: #f1efe8;
-  --code-ink: #22303f;
-  --tok-keyword: #8a3d7a;
-  --tok-string: #2f6b3a;
-  --tok-number: #a05a1e;
-  --tok-comment: #74808d;
-  --tok-name: #1f4f8f;
-  --tok-attr: #0f6b5c;
+  --grid-minor: var(--space-5);
+  --grid-major: calc(var(--space-5) * 5);
+
+  /* The one measurement the sticky column offsets have to agree with. The
+     top bar is a line of --text-m plus its padding, and the sidebar and the
+     table of contents both hang from underneath it. */
+  --topbar-height: 3.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1a2b;
-    --surface: #132335;
-    --grid: rgba(140, 180, 220, 0.08);
-    --grid-major: rgba(140, 180, 220, 0.16);
-    --ink: #e8eef4;
-    --muted: #8fa3b8;
-    --accent: #4fd1b5;
-    --accent-soft: rgba(79, 209, 181, 0.14);
-    --card-line: rgba(140, 180, 220, 0.35);
-    --hairline: rgba(140, 180, 220, 0.2);
-    --code-bg: #0b1725;
-    --code-ink: #dbe6f0;
-    --tok-keyword: #d79bd0;
-    --tok-string: #8fd6a2;
-    --tok-number: #eab882;
-    --tok-comment: #7e91a5;
-    --tok-name: #8fc0f5;
-    --tok-attr: #4fd1b5;
-  }
+/* Every heading on the page is a link target — the table of contents is made
+   of them — and the top bar is sticky, so without this a jump to `#grades`
+   puts `Grades` underneath the bar. The offset is the bar plus a line of
+   air. */
+html {
+  scroll-padding-top: calc(var(--topbar-height) + var(--space-4));
 }
 
-* { box-sizing: border-box; }
-
-body.docs {
-  margin: 0;
-  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  color: var(--ink);
-  background-color: var(--bg);
+body {
+  /* `background-image` and not the `background` shorthand: `base.css` has
+     already set the ground to --colour-bg and the shorthand would drop it. */
   background-image:
-    linear-gradient(var(--grid-major) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    linear-gradient(var(--colour-rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--colour-rule) 1px, transparent 1px),
+    linear-gradient(var(--colour-rule-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--colour-rule-soft) 1px, transparent 1px);
+  background-size:
+    var(--grid-major) var(--grid-major),
+    var(--grid-major) var(--grid-major),
+    var(--grid-minor) var(--grid-minor),
+    var(--grid-minor) var(--grid-minor);
+  /* The grid belongs to the page, not to the scroll: a fixed attachment
+     keeps the drawing still while the prose moves over it. */
   background-attachment: fixed;
-  line-height: 1.65;
 }
 
-a { color: var(--accent); }
-
+/* The first thing in the tab order and the last thing most readers see. Off
+   screen rather than `display: none`, because a hidden element cannot be
+   focused and a skip link that cannot be focused is decoration. */
 .skip {
   position: absolute;
-  left: -9999px;
   top: 0;
-  background: var(--surface);
-  color: var(--ink);
-  padding: 0.6rem 1rem;
+  left: -100vw;
   z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  background: var(--colour-surface-raised);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
 }
-.skip:focus { left: 0.5rem; top: 0.5rem; }
 
-/* Top bar --------------------------------------------------------- */
+.skip:focus {
+  left: var(--space-2);
+  top: var(--space-2);
+}
+
+/* ---- The top bar ----
+   --colour-chrome is the token minted for exactly this: the band that is
+   not the ground and not a surface. Opaque, so the blueprint grid stops at
+   its edge rather than showing through a translucent bar. */
 
 .topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem clamp(1rem, 4vw, 2.4rem);
-  border-bottom: 1px solid var(--hairline);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
   position: sticky;
   top: 0;
   z-index: 5;
-  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--topbar-height);
+  padding: var(--space-2) clamp(var(--space-4), 4vw, var(--space-6));
+  background: var(--colour-chrome);
+  border-bottom: 1px solid var(--colour-rule);
 }
 
+/* The same mark as the front door, in the same markup, at the size a bar
+   can hold. Wordmark-first: the mark supports the word and does not replace
+   it (identity.md). `site.css` sets the display size of this same class for
+   the one page that is nothing but the mark; the two sheets never load
+   together. */
 .wordmark {
-  font-weight: 700;
+  font-size: var(--text-m);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--ink);
-  font-size: 1.02rem;
 }
-.wordmark .tele { color: var(--accent); }
 
-.topnav { display: flex; gap: 1.2rem; font-size: 0.9rem; }
+.wordmark-lead {
+  color: var(--brand);
+}
+
+.topnav {
+  display: flex;
+  gap: var(--space-5);
+  font-size: var(--text-s);
+}
+
+/* Interactive text is told apart by its underline and its full-strength ink
+   (ADR-0047 §4). In a bar of two or three items the underline is noise, so
+   the bar spends the other half of that pair: the links sit at muted
+   strength and the current one comes up to full, under a datum line. */
 .topnav a {
-  color: var(--muted);
+  color: var(--colour-text-muted);
   text-decoration: none;
+  padding-bottom: var(--space-1);
   border-bottom: 1px solid transparent;
-  padding-bottom: 0.15rem;
 }
-.topnav a:hover,
-.topnav a[aria-current="page"] { color: var(--accent); border-color: var(--accent); }
 
-/* Three-column shell ---------------------------------------------- */
+.topnav a:hover {
+  color: var(--colour-text);
+}
+
+.topnav a[aria-current='page'] {
+  color: var(--colour-text);
+  border-bottom-color: var(--colour-fill);
+}
+
+/* ---- Three columns ----
+   Navigation, page, and where you are in the page. The middle column takes
+   `minmax(0, 1fr)` because a wide code block in a grid track will otherwise
+   push the track wider than the viewport instead of scrolling inside it. */
 
 .shell {
   display: grid;
   grid-template-columns: 15.5rem minmax(0, 1fr) 14rem;
-  gap: clamp(1.2rem, 3vw, 2.8rem);
+  gap: clamp(var(--space-5), 3vw, var(--space-6));
+  align-items: start;
   max-width: 82rem;
   margin: 0 auto;
-  padding: 2rem clamp(1rem, 4vw, 2.4rem) 4rem;
-  align-items: start;
+  padding: var(--space-6) clamp(var(--space-4), 4vw, var(--space-6))
+    calc(var(--space-6) * 2);
 }
 
-.sidebar, .toc {
+.sidebar,
+.toc {
   position: sticky;
-  top: 4.6rem;
-  max-height: calc(100vh - 6rem);
+  top: calc(var(--topbar-height) + var(--space-3));
+  max-height: calc(100vh - var(--topbar-height) - var(--space-6));
   overflow-y: auto;
-  font-size: 0.9rem;
+  font-size: var(--text-s);
 }
+
+/* ---- The sidebar ----
+   Derived from `nav.yaml` by `scripts/lib/nav.mjs`. Nothing about its order
+   is decided in this sheet. */
 
 .sidebar .navgroup {
-  font-size: 0.74rem;
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin: 1.6rem 0 0.5rem;
-  font-weight: 600;
+  color: var(--colour-text-muted);
 }
-.sidebar .navgroup:first-child { margin-top: 0; }
-.sidebar .navgroup a { color: var(--muted); text-decoration: none; }
-.sidebar .navgroup a:hover { color: var(--accent); }
 
-.sidebar ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--hairline); }
-.sidebar li { margin: 0; }
+.sidebar .navgroup:first-child {
+  margin-top: 0;
+}
+
+.sidebar .navgroup a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar .navgroup a:hover {
+  color: var(--colour-text);
+}
+
+/* A datum line down the section, and each entry hanging off it. The list's
+   rule and the entry's marker are the same line at two strengths, which is
+   why the marker is pulled back over it by a pixel. */
+.sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--colour-rule);
+}
+
 .sidebar li a {
   display: block;
-  padding: 0.28rem 0 0.28rem 0.85rem;
   margin-left: -1px;
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
   border-left: 2px solid transparent;
-  color: var(--ink);
   text-decoration: none;
+  color: var(--colour-text-muted);
 }
-.sidebar li a:hover { color: var(--accent); }
-.sidebar a[aria-current="page"] {
-  color: var(--accent);
-  border-left-color: var(--accent);
-  font-weight: 600;
+
+.sidebar li a:hover {
+  color: var(--colour-text);
 }
+
+/* Where you are, marked three ways and not one: the ink comes to full
+   strength, the weight goes up, and the datum line thickens. Hue is never
+   load-bearing (ADR-0047 §5) and there is no accent hue to spend here in
+   any case. */
+.sidebar a[aria-current='page'] {
+  color: var(--colour-text);
+  font-weight: var(--weight-semibold);
+  border-left-color: var(--colour-fill);
+}
+
+/* ---- The table of contents ---- */
 
 .toc h2 {
-  font-size: 0.74rem;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 0.5rem;
+  color: var(--colour-text-muted);
 }
-.toc ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--hairline); }
+
+.toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--colour-rule);
+}
+
 .toc li a {
   display: block;
-  padding: 0.2rem 0 0.2rem 0.85rem;
-  color: var(--muted);
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  color: var(--colour-text-muted);
   text-decoration: none;
 }
-.toc li a:hover { color: var(--accent); }
-.toc .toc-h3 a { padding-left: 1.6rem; font-size: 0.86rem; }
 
-/* Page body ------------------------------------------------------- */
+.toc li a:hover {
+  color: var(--colour-text);
+}
 
-.page { min-width: 0; }
+.toc .toc-h3 a {
+  padding-left: var(--space-5);
+  font-size: var(--text-xs);
+}
+
+
+/* ---- The page ---- */
+
+.page {
+  min-width: 0;
+}
 
 .prose {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: clamp(1.4rem, 4vw, 2.8rem);
+  padding: clamp(var(--space-5), 4vw, calc(var(--space-6) + var(--space-5)));
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-2);
 }
 
-.prose > *:first-child { margin-top: 0; }
-.prose > *:last-child { margin-bottom: 0; }
+/* Block rhythm. `base.css` withholds it on purpose — "a console panel and a
+   marketing column do not want the same rhythm" — so the prose column sets
+   its own, out of the space scale. */
 
-.prose p, .prose li, .prose dd { max-width: 38rem; }
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose dl {
+  margin: var(--space-4) 0;
+}
+
+/* The measure. Around 70 characters at --text-base in Atkinson, which is
+   where a line stops needing the eye to hunt for the next one. It is set on
+   the text blocks rather than on the column so that a table, a code block
+   and a card grid can still use the full width — those are read by
+   scanning, not by line. */
+.prose p,
+.prose li,
+.prose dd {
+  max-width: 38rem;
+}
+
+.prose li {
+  margin: var(--space-1) 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--space-5);
+}
+
+/* Headings. The type scale stops at 22px because it was cut for interface
+   text, and a page title is not interface text; the same departure, and the
+   same reasoning, as the wordmark in `site.css`. Adding a display step to
+   `tokens.css` would be a change to the shared token layer and belongs
+   upstream, not here. h2 down are scale steps exactly. */
 
 .prose h1 {
-  font-size: clamp(1.8rem, 4.2vw, 2.4rem);
-  line-height: 1.2;
-  margin: 0 0 1.2rem;
+  margin: 0 0 var(--space-5);
+  font-size: clamp(var(--text-xl), 4.2vw, 2.25rem);
   letter-spacing: -0.01em;
 }
+
+/* A datum line above every section, which is the identity's own device and
+   does the work a size jump would otherwise have to do. */
 .prose h2 {
-  font-size: 1.42rem;
-  margin: 2.6rem 0 0.8rem;
-  padding-top: 1.4rem;
-  border-top: 1px solid var(--hairline);
-  line-height: 1.3;
+  margin: calc(var(--space-6) + var(--space-2)) 0 var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--colour-rule-soft);
+  font-size: var(--text-xl);
 }
-.prose h3 { font-size: 1.13rem; margin: 1.8rem 0 0.6rem; }
-.prose h4 { font-size: 1rem; margin: 1.4rem 0 0.5rem; color: var(--muted); }
 
-.prose h2 a.header-anchor,
-.prose h3 a.header-anchor,
-.prose h4 a.header-anchor {
-  color: var(--muted);
-  text-decoration: none;
-  opacity: 0;
-  margin-left: 0.4rem;
-  font-weight: 400;
+.prose h3 {
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: var(--text-l);
 }
-.prose h2:hover a.header-anchor,
-.prose h3:hover a.header-anchor,
-.prose h4:hover a.header-anchor,
-.prose a.header-anchor:focus { opacity: 1; }
 
-.prose ul, .prose ol { padding-left: 1.3rem; }
-.prose li { margin: 0.3rem 0; }
+.prose h4 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-base);
+  color: var(--colour-text-muted);
+}
+
+/* Atkinson draws long descenders, and `base.css` says a surface that wants
+   its rule further from them sets the offset itself. This one does. */
+.prose a {
+  text-underline-offset: 0.2em;
+}
 
 .prose blockquote {
-  margin: 1.2rem 0;
-  padding: 0.2rem 0 0.2rem 1rem;
-  border-left: 3px solid var(--accent);
-  color: var(--muted);
+  margin: var(--space-5) 0;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--colour-rule);
+  color: var(--colour-text-muted);
 }
 
-.prose hr { border: 0; border-top: 1px solid var(--hairline); margin: 2rem 0; }
+.prose hr {
+  margin: var(--space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--colour-rule-soft);
+}
 
-/* Description lists */
-.prose dl { margin: 1.2rem 0; }
+/* Description lists. `docs/index.md` is written term-then-definition, so
+   this is prose furniture rather than an edge case. The term is told from
+   the definition by weight, and the definition hangs off a datum line. */
 .prose dt {
-  font-weight: 600;
-  color: var(--accent);
-  margin-top: 1.1rem;
+  margin-top: var(--space-4);
+  font-weight: var(--weight-semibold);
 }
-.prose dd { margin: 0.25rem 0 0 0; padding-left: 1rem; border-left: 1px solid var(--hairline); }
 
-/* Tables */
-.table-scroll { overflow-x: auto; margin: 1.4rem 0; border: 1px solid var(--hairline); border-radius: 8px; }
-.prose table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
-.prose th, .prose td {
-  text-align: left;
-  vertical-align: top;
-  padding: 0.6rem 0.9rem;
-  border-bottom: 1px solid var(--hairline);
+.prose dd {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--colour-rule-soft);
 }
-.prose th { background: var(--accent-soft); font-weight: 600; white-space: nowrap; }
-.prose tbody tr:last-child td { border-bottom: 0; }
 
-/* Code */
-.prose code {
-  font-family: "SF Mono", "JetBrains Mono", "Fira Mono", Menlo, Consolas, monospace;
-  font-size: 0.88em;
-}
-.prose :not(pre) > code {
-  background: var(--code-bg);
-  border: 1px solid var(--hairline);
-  border-radius: 4px;
-  padding: 0.08em 0.34em;
-}
-.prose pre.code {
-  background: var(--code-bg);
-  color: var(--code-ink);
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-  padding: 1rem 1.1rem;
+/* ---- Tables ----
+   `base.css` has already collapsed the borders, set the cell padding, and
+   put a rule under the header rather than a fill — the identity is datum
+   lines and hairlines. What is left is the wrapper that lets a wide table
+   scroll inside the column instead of widening it, and the rules between
+   rows. */
+
+.table-scroll {
+  margin: var(--space-5) 0;
   overflow-x: auto;
-  margin: 1.3rem 0;
-  line-height: 1.55;
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-2);
 }
-.prose pre.code code { background: none; border: 0; padding: 0; font-size: 0.86rem; }
 
-/* Highlighting, applied at build time by highlight.js */
-.hljs-comment, .hljs-quote { color: var(--tok-comment); font-style: italic; }
-.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag, .hljs-formula { color: var(--tok-keyword); }
-.hljs-string, .hljs-meta .hljs-string, .hljs-regexp, .hljs-addition { color: var(--tok-string); }
-.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-variable, .hljs-template-variable { color: var(--tok-number); }
-.hljs-title, .hljs-section, .hljs-name, .hljs-selector-id, .hljs-selector-class { color: var(--tok-name); }
-.hljs-attr, .hljs-attribute, .hljs-type, .hljs-built_in, .hljs-meta { color: var(--tok-attr); }
-.hljs-deletion { color: #a03535; }
-.hljs-emphasis { font-style: italic; }
-.hljs-strong { font-weight: 700; }
+.prose table {
+  width: 100%;
+  font-size: var(--text-s);
+}
 
-/* Section index cards */
-.cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: 1.6rem 0; list-style: none; padding: 0; }
-.cards li { margin: 0; max-width: none; }
+.prose td {
+  vertical-align: top;
+  border-bottom: 1px solid var(--colour-rule-soft);
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---- Code ----
+   `base.css` has already put `code` and `pre` in the mono face. A code
+   block is recessed rather than raised: it drops to --colour-bg, the
+   page's own ground, which reads as a well on both themes where
+   --colour-surface-raised would be all but invisible on the light one. */
+
+.prose :not(pre) > code {
+  padding: 0.1em 0.34em;
+  font-size: 0.88em;
+  background: var(--colour-bg);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-1);
+}
+
+.prose pre.code {
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  font-size: var(--text-s);
+  line-height: var(--leading-normal);
+  background: var(--colour-bg);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-2);
+}
+
+.prose pre.code code {
+  padding: 0;
+  font-size: inherit;
+  background: none;
+  border: 0;
+}
+
+/* ---- Highlighting ----
+   Applied at build time by highlight.js, so the browser downloads nothing
+   to read a listing.
+
+   It is drawn in weight and ink strength, not in hue, and that is the
+   token layer's decision rather than a taste. There is no syntax palette
+   in `tokens.css`; the only hues it carries are the three severities —
+   which it says in as many words that "nothing else uses" — and the four
+   signal lanes, which do not survive colour-vision deficiency and are
+   never allowed to appear without their lane name (ADR-0047 §5). Minting a
+   dozen token colours here to paint keywords would break the rule this
+   sheet exists under, and borrowing the severity trio would spend three
+   colours that mean something on three things that mean nothing.
+
+   Three strengths of the one ink, then, plus weight and italic: comments
+   recede, declarations come forward, values sit between. That is the same
+   distinction a palette makes and it survives being printed, being
+   photocopied, and being read by someone who sees no hue at all. */
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--colour-text-faint);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-section,
+.hljs-formula {
+  font-weight: var(--weight-semibold);
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-attr,
+.hljs-attribute,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-type,
+.hljs-built_in,
+.hljs-meta {
+  font-weight: var(--weight-medium);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-variable,
+.hljs-template-variable {
+  color: var(--colour-text-muted);
+}
+
+/* An addition and a deletion already carry a `+` or a `-` in the listing,
+   which is the mark that does the work; severity colour is reserved. */
+.hljs-addition,
+.hljs-deletion {
+  color: var(--colour-text-muted);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: var(--weight-bold);
+}
+
+/* ---- Section index cards ----
+   The list a section gets when it has no `index.md` of its own. Plates, not
+   pills, and no fill: a card is a rule around a title and a sentence. */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards li {
+  margin: 0;
+  max-width: none;
+}
+
 .cards a {
   display: block;
   height: 100%;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--card-line);
-  border-radius: 8px;
+  padding: var(--space-4);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-2);
   text-decoration: none;
-  color: var(--ink);
+  transition: border-color var(--motion-fast) var(--motion-ease);
 }
-.cards a:hover { border-color: var(--accent); }
-.cards strong { display: block; color: var(--accent); margin-bottom: 0.25rem; }
-.cards span { color: var(--muted); font-size: 0.9rem; }
 
-/* Footer */
+.cards a:hover {
+  border-color: var(--colour-fill);
+}
+
+.cards strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+
+.cards span {
+  color: var(--colour-text-muted);
+  font-size: var(--text-s);
+}
+
+/* ---- The foot ----
+   The same three things the front door's foot carries — where to edit the
+   page, the colophon, and the theme control — laid out the same way, so a
+   reader who arrives from the landing page finds them where they left them. */
+
 .pagefoot {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  font-size: 0.82rem;
-  color: var(--muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1.2rem;
+  align-items: center;
   justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--colour-rule-soft);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
 }
-.pagefoot p { margin: 0; }
-.pagefoot a { color: var(--muted); }
-.pagefoot a:hover { color: var(--accent); }
 
-/* Narrow screens --------------------------------------------------- */
+.pagefoot p {
+  margin: 0;
+}
+
+.colophon {
+  letter-spacing: 0.04em;
+}
+
+/* The same shape as the console's chrome control (`.lens-control`) and the
+   front door's, so all three surfaces offer the same three states in the
+   same form. It is `hidden` in the markup and unhidden by `theme.js`,
+   because a control that cannot act is worse than no control, and without
+   script the page still resolves to a complete theme from the bare `:root`
+   block in `tokens.css`. */
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.theme-control select {
+  font: inherit;
+  font-size: var(--text-xs);
+}
+
+/* ---- Narrow ----
+   One column, and the page first in it.
+
+   The table of contents goes: it duplicates headings that are now a thumb's
+   scroll away. The sidebar stays, unsticks, and moves *below* the page,
+   which is the one place this sheet departs from source order. The
+   navigation is derived from `nav.yaml` and `nav.yaml` currently publishes
+   thirty-seven pages: above the article that is roughly a screen and a half
+   of links between a reader and the thing they followed a link to get to.
+   Below it, it is a section index at the foot of the page, which is where a
+   reader who has finished reading looks for one anyway.
+
+   Source order is kept for everyone the visual order does not reach: the
+   sidebar is still the second thing in the document, so the skip link, the
+   tab order and a screen reader all find it before the article.
+
+   No colour is set here, or anywhere else behind a media query
+   (ADR-0047 §2). */
 
 @media (max-width: 62rem) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
-  .toc { display: none; }
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .toc {
+    display: none;
+  }
+
+  .page {
+    order: 1;
+  }
+
   .sidebar {
+    order: 2;
     position: static;
     max-height: none;
-    border-bottom: 1px solid var(--hairline);
-    padding-bottom: 1rem;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--colour-rule-soft);
   }
 }
