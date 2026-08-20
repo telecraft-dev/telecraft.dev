@@ -84,3 +84,13 @@ Both checks are plain Node scripts and need no dependencies:
 node tools/check-external-assets.mjs
 node tools/vendor.mjs check
 ```
+
+## Licence
+
+[Elastic License 2.0](LICENSE), the same licence as the rest of the project
+(telecraft ADR-0050 §6).
+
+The vendored design files under `assets/` are copies of the platform
+repository's, taken by `tools/vendor.mjs` and covered by the same licence.
+The two typefaces beside them are not: they ship under the SIL Open Font
+License, whose text travels with the faces in `assets/fonts/`.
