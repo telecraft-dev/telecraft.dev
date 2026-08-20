@@ -125,6 +125,20 @@ export function resolveLink(href, { page, model, warn }) {
     return { href: relativeTo(page.output, known.output) + suffix, external: false };
   }
 
+  // A link to a section directory rather than to a page in it — `read [the
+  // guides](../guides/)`, which is how the prose refers to a whole section.
+  // It resolves to that section's index, real or generated. Leaving it as a
+  // directory happens to work on a host that serves directory indexes, and
+  // that is exactly the kind of dependence on the host's manners this
+  // generator was written to avoid: every other link in the output is a flat
+  // `.html` file, and so is this one.
+  const directory = target.replace(/\/+$/, '');
+  const section = model.sections.find((candidate) => candidate.path === directory);
+  const sectionIndex = section?.index?.output ?? section?.generatedIndex?.output;
+  if (sectionIndex) {
+    return { href: relativeTo(page.output, sectionIndex) + suffix, external: false };
+  }
+
   // The working corpus is deliberately unpublished, and the
   // documentation links to it on GitHub instead.
   const sourceUrl = githubUrl(target, model);

@@ -12,7 +12,7 @@
 //   --docs DIR    the checked-out docs directory (default: telecraft/docs)
 //   --out DIR     where to write the site (default: _site)
 //   --strict      treat warnings as errors
-//   --skip-check  do not run the external-host check
+//   --skip-check  do not run the zero-CDN check over the output
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { buildModel, isNotPublished, outputPathFor } from './lib/nav.mjs';
 import { createRenderer } from './lib/markdown.mjs';
 import { renderPage, escapeHtml } from './lib/layout.mjs';
-import { checkNoExternal } from './check-no-external.mjs';
+import { findExternalReferences, formatViolation } from '../tools/check-external-assets.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -42,7 +42,7 @@ function parseArgs(argv) {
   return options;
 }
 
-function main() {
+async function main() {
   const options = parseArgs(process.argv.slice(2));
   const warnings = [];
   const warn = (message) => {
@@ -53,14 +53,14 @@ function main() {
   fs.rmSync(options.out, { recursive: true, force: true });
   fs.mkdirSync(options.out, { recursive: true });
 
-  copySiteShell(options.out);
+  copySiteShell(options.out, warn);
 
   const navPath = path.join(options.docs, 'nav.yaml');
   if (!fs.existsSync(navPath)) {
     // The documentation has not landed in telecraft yet, or the checkout
     // failed. Publish the landing page rather than taking the site down.
     warn(`no nav.yaml at ${navPath}; built the landing page only`);
-    finish(options, warnings, 0);
+    await finish(options, warnings, 0);
     return;
   }
 
@@ -114,18 +114,43 @@ function main() {
 
   assertNotPublished({ model, options, written });
 
-  finish(options, warnings, written.length);
+  await finish(options, warnings, written.length);
 }
 
-/** Copy the landing page and the site-level assets into the output. */
-function copySiteShell(outDir) {
-  fs.copyFileSync(path.join(repoRoot, 'index.html'), path.join(outDir, 'index.html'));
+/**
+ * Everything the site serves that is not a documentation page: this
+ * repository's own files, copied to the root of the output.
+ *
+ * The list is exhaustive on purpose. Until this build existed the workflow
+ * uploaded the repository root, so every file here was served whether or not
+ * anyone meant it to be; now nothing is served unless it is named below, and
+ * a file that stops being served stops silently. Hence the list, and hence
+ * the fact that `favicon.svg` and `LICENSE` are on it: the mark is asked for
+ * by name in the head of every page, and `/LICENSE` is a URL the site has
+ * already been answering.
+ *
+ * `CNAME` is optional because the custom domain is presently held in the
+ * repository's Pages settings rather than in a file. If one is ever added it
+ * has to reach the output, or the first deploy after it drops the domain.
+ */
+const SITE_FILES = ['index.html', 'favicon.svg', 'LICENSE', 'CNAME'];
+
+function copySiteShell(outDir, warn) {
+  for (const name of SITE_FILES) {
+    const source = path.join(repoRoot, name);
+    if (fs.existsSync(source)) {
+      fs.copyFileSync(source, path.join(outDir, name));
+    } else if (name !== 'CNAME') {
+      warn(`${name} is not in this repository; the site will be served without it`);
+    }
+  }
+
   const assets = path.join(repoRoot, 'assets');
   if (fs.existsSync(assets)) {
     fs.cpSync(assets, path.join(outDir, 'assets'), { recursive: true });
+  } else {
+    warn('assets/ is not in this repository; every page will be served unstyled');
   }
-  const cname = path.join(repoRoot, 'CNAME');
-  if (fs.existsSync(cname)) fs.copyFileSync(cname, path.join(outDir, 'CNAME'));
 }
 
 function sectionIndexBody(section) {
@@ -181,12 +206,16 @@ function* walk(dir, prefix = '') {
   }
 }
 
-function finish(options, warnings, pageCount) {
+async function finish(options, warnings, pageCount) {
+  // The same check CI runs over the source tree, run here over what will
+  // actually be deployed. This is the pass that matters: most of `_site/` was
+  // written in another repository and arrives through `nav.yaml`, so the
+  // source pass cannot see it.
   if (options.check) {
-    const offenders = checkNoExternal(options.out);
-    if (offenders.length > 0) {
-      const lines = offenders.map((o) => `  ${o.file}: ${o.match}`).join('\n');
-      throw new Error(`the built site would make external requests:\n${lines}`);
+    const { violations } = await findExternalReferences(options.out);
+    if (violations.length > 0) {
+      const lines = violations.map((violation) => `  ${formatViolation(violation)}`).join('\n');
+      throw new Error(`the built site would fetch from external hosts:\n${lines}`);
     }
   }
 
@@ -199,7 +228,7 @@ function finish(options, warnings, pageCount) {
 }
 
 try {
-  main();
+  await main();
 } catch (error) {
   console.error(`build failed: ${error.message}`);
   process.exitCode = 1;

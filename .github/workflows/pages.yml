@@ -12,6 +12,12 @@ name: Deploy Pages
 # payload is attacker-controllable: it never reaches a `ref:` and never
 # reaches a `run:` script. It is read once, through `env`, to print which
 # commit asked for the build.
+#
+# Both of the rules in `checks.yml` are checked again here, and deliberately
+# not by reusing that workflow. `checks.yml` guards this repository on a pull
+# request; this job guards a deploy, and a deploy carries pages written in
+# another repository that no pull request here ever saw. Two different things
+# are being proved about two different trees.
 
 on:
   push:
@@ -72,14 +78,23 @@ jobs:
           node-version: 20
           cache: npm
 
+      # Before anything is built, because a deploy that ships a design system
+      # nobody can trace is worse than a deploy that does not happen. Needs no
+      # dependencies, so it runs ahead of `npm ci`.
+      - name: The vendored design system matches its source
+        run: node tools/vendor.mjs check
+
       - run: npm ci
 
       - run: npm test
 
+      # `npm run build` runs the zero-CDN check over `_site/` as its last
+      # step, so the site cannot be built at all if a documentation page
+      # arrives carrying a remote sub-resource.
       - name: Build the site
         run: npm run build -- --docs telecraft/docs
 
-      - name: Check that the site makes no external requests
+      - name: Nothing the built site fetches comes from another origin
         run: npm run check:external
 
       - uses: actions/configure-pages@v5

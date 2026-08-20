@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import { splitFrontMatter } from './frontmatter.mjs';
+import { splitFrontMatter, stripFrontMatter } from './frontmatter.mjs';
 
 /** Where a page ends up, given its path relative to the docs directory. */
 export function outputPathFor(docsRelative) {
@@ -76,7 +76,28 @@ export function buildModel(docsDir, warn) {
     let data = {};
     let body = '';
     if (isMarkdown) {
-      ({ data, body } = splitFrontMatter(fs.readFileSync(absolute, 'utf8')));
+      const source = fs.readFileSync(absolute, 'utf8');
+      try {
+        ({ data, body } = splitFrontMatter(source));
+      } catch (error) {
+        // Front matter that YAML will not parse. The commonest cause by
+        // far is an unquoted value containing a colon — `description: The
+        // layout: root files, ...` is a nested mapping to a YAML parser
+        // and a sentence to everybody else.
+        //
+        // The same reasoning as a page that has not landed: a documentation
+        // repository this one does not control should not be able to take
+        // telecraft.dev down by one line. The page publishes with its title
+        // from nav.yaml or from its filename, the block is dropped rather
+        // than rendered as prose, and the warning names the file so it can
+        // be fixed where it is authored. `--strict` makes it fatal.
+        warn(
+          `${docsRelative} has front matter that is not valid YAML (${error.message.split('\n')[0]}); ` +
+            'publishing it without its front matter',
+        );
+        data = {};
+        body = stripFrontMatter(source);
+      }
     }
 
     const output = path.posix.join(basePath.slice(1), outputPathFor(docsRelative));

@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "check:external": "node scripts/check-no-external.mjs _site",
+    "check:external": "node tools/check-external-assets.mjs _site",
+    "check:vendored": "node tools/vendor.mjs check",
     "serve": "node scripts/serve.mjs",
     "test": "node --test test/"
   },

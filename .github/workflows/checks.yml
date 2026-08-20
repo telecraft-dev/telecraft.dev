@@ -1,10 +1,13 @@
 name: Checks
 
-# Two rules this site cannot break quietly.
+# Three rules this site cannot break quietly. Nothing here deploys.
 #
 # The air gap (ADR-0019, ADR-0045 §5): nothing the browser fetches comes from
-# another origin. The console checks this over its built bundle; here there is
-# no build, so the check reads the repository.
+# another origin. It is checked twice, over two different trees. The source
+# tree is what a pull request changes. `_site/` is what a reader is served,
+# and most of it was written in telecraft-dev/telecraft and arrives through
+# `docs/nav.yaml` — a page nobody here reviewed can carry a remote image, and
+# the source pass cannot see it.
 #
 # The vendored design system: the tokens, the base sheet and the faces are
 # authored in telecraft-dev/telecraft and copied here, because ADR-0047 asked
@@ -12,6 +15,13 @@ name: Checks
 # (telecraft-dev/telecraft#86). A copy that nobody checks becomes a fork by
 # accident, so the schedule exists as much as the pull-request trigger: drift
 # happens upstream, on a day when nothing changed here.
+#
+# The build: `nav.yaml` is the contract, and `npm test` is what asserts the
+# generator still honours it — `not_published`, link resolution, the shared
+# page chrome, and the rule that `docs.css` reads the palette rather than
+# forking it. The weekly run builds against telecraft's `main` as it stands
+# that morning, which is the same thing a deploy would do, without deploying
+# it.
 
 on:
   push:
@@ -27,14 +37,43 @@ permissions:
 
 jobs:
   checks:
-    name: Air gap and vendored design system
+    name: Air gap, vendored design system, and the build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Nothing is fetched from another origin
+          cache: npm
+
+      # Both `tools/` scripts are plain Node with no dependencies, so they run
+      # before `npm ci` and report on a bare checkout. They also run before the
+      # documentation is checked out, so that "the source" means this
+      # repository: telecraft's `docs/` is another repository's source and is
+      # checked where it matters, in `_site/`, after the build.
+      - name: Nothing in the source is fetched from another origin
         run: node tools/check-external-assets.mjs
+
       - name: The vendored design system matches its source
         run: node tools/vendor.mjs check
+
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@v4
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: The site builds from telecraft's documentation
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Nothing the built site fetches comes from another origin
+        run: npm run check:external

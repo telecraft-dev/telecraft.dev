@@ -26,6 +26,21 @@ export function splitFrontMatter(source) {
   return { data: data ?? {}, body: source.slice(match[0].length) };
 }
 
+/**
+ * The body alone, with no attempt to read the fence.
+ *
+ * For a page whose front matter will not parse: the block is still a fence
+ * and still not prose, so it comes off, and the caller supplies the metadata
+ * from elsewhere.
+ *
+ * @param {string} source Raw file contents.
+ * @returns {string}
+ */
+export function stripFrontMatter(source) {
+  const match = FENCE.exec(source);
+  return match ? source.slice(match[0].length) : stripBom(source);
+}
+
 function stripBom(text) {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
