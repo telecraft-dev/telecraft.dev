@@ -7,31 +7,174 @@
  * Two rules bind it. Nothing is fetched from another origin, ever
  * (ADR-0019, ADR-0045 §5) — `tools/check-external-assets.mjs` fails the
  * build if it is. And hue is never load-bearing (ADR-0047 §5): no signal
- * colour appears here at all, which is the simplest way to keep the rule
- * on a page with no data on it. The only colour with a job is the brand
- * amber, which ADR-0047 §4 confines to exactly this surface.
+ * colour and no severity colour appears here at all, which is the simplest
+ * way to keep the rule on a page with no data on it. The only colour with a
+ * job is the brand amber, which ADR-0047 §4 confines to exactly this
+ * surface, and it is only ever set on --colour-bg, the one ground the
+ * palette check measures it against (design-system.md, "Brand").
+ *
+ * `base.css` deliberately carries no block rhythm and no heading sizes,
+ * because a console panel and a marketing column want neither the same
+ * margins nor the same scale step. This file sets both, from the scale.
  */
 
-/* ---- The page ----
-   Blueprint linework, which is the identity's own reference
-   (docs/branding/identity.md: datum lines and hairlines, calipers,
-   Blueprints as a domain object). The two rule tokens draw it, so the grid
-   follows the theme without naming a colour of its own, and the spacing is
-   the space scale rather than two numbers picked by eye. */
+/* ---- The page ---- */
 
 :root {
+  /* Blueprint linework, which is the identity's own reference
+     (identity.md: datum lines and hairlines, calipers, Blueprints as a
+     domain object). The two rule tokens draw it, so the grid follows the
+     theme without naming a colour of its own. */
   --grid-minor: var(--space-5);
   --grid-major: calc(var(--space-5) * 5);
+
+  /* One measure for every prose column on the page, so the left datum is
+     the same distance from the right ragged edge in every band. */
+  --measure: 34rem;
+  /* The band is the measure plus the drafting margin, and not a pixel more:
+     a wider band leaves the prose pinned to a datum on the left with a
+     ragged emptiness on the right, which reads as a layout that ran out
+     rather than a margin that was left. */
+  --band-width: 50rem;
+  /* The drafting margin the section numbers hang in, left of the datum. */
+  --rail: 4.5rem;
 }
 
-html,
 body {
-  height: 100%;
+  /* No `place-items: center` any more: this is a page with sections, and a
+     column centred in the viewport cannot have a datum line down it. */
+  min-height: 100%;
 }
 
-body {
-  /* `background-image` and not the `background` shorthand: `base.css` has
-     already set the ground to --colour-bg and the shorthand would drop it. */
+/* Block rhythm. Set once on the container rather than per element, which is
+   what stops a heading and a paragraph disagreeing about the gap between
+   them in two different bands.
+
+   The reset and the rhythm are both child selectors, and deliberately so.
+   `.band-body p` would be the obvious place to zero the browser's margins
+   and it is one specificity point heavier than `.band-body > * + *`, so it
+   would silently win and collapse the rhythm to nothing. Reset the same
+   children the rhythm spaces, and the two rules tie; the later one wins on
+   the elements it names. */
+
+.band-body > * {
+  margin: 0;
+}
+
+.band-body > * + * {
+  margin-top: var(--space-4);
+}
+
+.band-body p {
+  max-width: var(--measure);
+}
+
+.band-body h2 {
+  /* A one-off clamp rather than a scale step. The scale stops at 22px
+     because it was cut for interface text (design-system.md, "The scale");
+     a section head in a marketing column is a display line, and adding a
+     display step would be a change to the shared token layer and belongs
+     upstream, not here. */
+  font-size: clamp(var(--text-xl), 3.2vw, 1.75rem);
+  letter-spacing: -0.01em;
+}
+
+.band-body h3 {
+  font-size: var(--text-l);
+}
+
+/* A heading that opens a new beat wants more air above it than a paragraph
+   does. This is the only place the rhythm varies. */
+.band-body > h3 {
+  margin-top: var(--space-6);
+}
+
+/* ---- The chrome ----
+   `.topbar`, `a.wordmark` and `nav.topnav` are the shape the documentation
+   site generates against. Both surfaces are the same site or neither is. */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  background: var(--colour-chrome);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.topnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--text-m);
+}
+
+/* Atkinson draws long descenders, and `base.css` says a surface that wants
+   its rule further from them sets the offset itself. */
+.topnav a,
+.band-body a,
+.foot a {
+  text-underline-offset: 0.2em;
+}
+
+.topnav a:hover,
+.band-body a:hover,
+.foot a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---- The wordmark ----
+   Wordmark-first: the mark supports the word and does not replace it
+   (identity.md). `.wordmark` rather than `.mark`, which in this design
+   system means a drawn state mark and nothing else.
+
+   One class, two sizes. The chrome's is an anchor at interface size and the
+   hero's is the same anchor's markup at display size, so the documentation
+   site can emit `a.wordmark` into its own topbar and get this without
+   knowing about `.wordmark-display`. */
+
+.wordmark {
+  margin: 0;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+a.wordmark:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.wordmark-display {
+  font-size: clamp(2.4rem, 9vw, 4.4rem);
+}
+
+.wordmark-lead {
+  color: var(--brand);
+}
+
+/* ---- The hero ----
+   The blueprint sheet lives here and nowhere else. Drafting linework is a
+   drawing surface, not wallpaper: tiled behind a page of prose it stops
+   being measurement and becomes decoration, which identity.md rules out.
+   It is drawn on a pseudo-element rather than the section so the mask that
+   dissolves it into the page cannot reach the text. */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-6) var(--space-5) calc(var(--space-6) * 2);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background-image:
     linear-gradient(var(--colour-rule) 1px, transparent 1px),
     linear-gradient(90deg, var(--colour-rule) 1px, transparent 1px),
@@ -42,36 +185,19 @@ body {
     var(--grid-major) var(--grid-major),
     var(--grid-minor) var(--grid-minor),
     var(--grid-minor) var(--grid-minor);
-  display: grid;
-  place-items: center;
-  padding: var(--space-6);
+  background-position: center top;
+  /* The sheet runs out before the section rule does, so the band below
+     starts on clean ground. The prefixed copy is for Safari before 15.4,
+     which shipped `mask-image` only behind `-webkit-`. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 92%);
 }
 
-main {
-  max-width: 40rem;
+.hero-inner {
+  position: relative;
+  max-width: var(--band-width);
+  margin: 0 auto;
   text-align: center;
-}
-
-/* ---- The wordmark ----
-   Wordmark-first: the mark supports the word and does not replace it
-   (identity.md). `.wordmark` rather than `.mark`, which in this design
-   system means a drawn state mark and nothing else.
-
-   The size is a clamp rather than a scale step because the scale stops at
-   22px — it was cut for interface text, and a display line is not interface
-   text. Adding a display step to `tokens.css` would be a change to the
-   shared token layer and belongs upstream, not here. */
-
-.wordmark {
-  margin: 0;
-  font-size: clamp(2.6rem, 9vw, 4.4rem);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.wordmark-lead {
-  color: var(--brand);
 }
 
 /* ---- The pulse ----
@@ -87,7 +213,7 @@ main {
 .pulse {
   display: block;
   width: min(28rem, 80vw);
-  margin: var(--space-4) auto var(--space-5);
+  margin: var(--space-3) auto var(--space-5);
 }
 
 .pulse polyline {
@@ -128,62 +254,415 @@ main {
   }
 }
 
-/* ---- The words ---- */
+/* ---- The words in the hero ---- */
 
-.tagline {
-  margin: 0 auto var(--space-6);
-  max-width: 34rem;
-  font-size: clamp(var(--text-base), 2.6vw, var(--text-l));
+.lede {
+  margin: 0 auto var(--space-4);
+  max-width: 30rem;
+  font-size: clamp(var(--text-l), 3vw, 1.5rem);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+.hero-note {
+  margin: 0 auto var(--space-5);
+  max-width: var(--measure);
   color: var(--colour-text-muted);
 }
 
-/* A plate, not a pill: the largest radius in the system is 8px because the
-   identity is datum lines and hairlines (design-system.md, "Space, radius,
-   focus, motion, elevation"). Set in the mono face, which is the only place
-   the second family appears on this page — a stamp reads as an instrument's
-   stamp, and the words are a status rather than prose. */
-.soon {
-  display: inline-block;
-  margin-bottom: var(--space-6);
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--colour-rule);
-  border-radius: var(--radius-1);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--colour-text-muted);
-}
+/* Two calls to action in the two tones the system already has, and the tones
+   are structural rather than chromatic (design-system.md, "The primitive
+   layer"): primary is a solid fill of the ink, quiet is underlined text.
+   Two bordered plates side by side would be the paired marketing buttons
+   identity.md rejects, and would also claim that both destinations matter
+   equally. The demo is the thing worth opening first. */
 
-/* The underline comes from `base.css`, which says a surface that wants its
-   rule further from the descenders sets the offset itself. Atkinson draws
-   long descenders, so this surface does. */
-.links {
-  margin: 0;
-  font-size: var(--text-m);
-}
-
-.links a {
-  text-underline-offset: 0.2em;
-}
-
-.links a:hover {
-  color: var(--brand);
-}
-
-/* ---- The foot ----
-   The colophon and the theme control on one line, wrapping to two when
-   there is no room, because neither is worth truncating. */
-
-.foot {
+.actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: var(--space-3) var(--space-5);
-  margin-top: var(--space-6);
+  margin: 0 0 var(--space-5);
+}
+
+.action {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  font-size: var(--text-m);
+  font-weight: var(--weight-medium);
+  text-underline-offset: 0.25em;
+}
+
+.action:hover {
+  text-decoration-thickness: 2px;
+}
+
+.action-lead {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-1);
+  background: var(--colour-fill);
+  color: var(--colour-on-fill);
+  text-decoration: none;
+}
+
+/* The fill is the accent, and a hover that lightened it would need a second
+   value per theme. The plate holds and the underline does the work — which
+   is also the one signal `base.css` gives a link, given back to a link that
+   had traded it for a plate. */
+.action-lead:hover,
+.action-lead:focus-visible {
+  text-decoration: underline;
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 auto;
+  max-width: var(--measure);
+  font-size: var(--text-s);
+  color: var(--colour-text-muted);
+  text-align: left;
+}
+
+/* A stamp, not a pill: the largest radius in the system is 8px because the
+   identity is datum lines and hairlines (design-system.md, "Space, radius,
+   focus, motion, elevation"). Set in the mono face, which is where the
+   second family belongs — a stamp reads as an instrument's stamp, and the
+   words are a status rather than prose. */
+.stamp {
+  flex: none;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--colour-text-muted);
+}
+
+/* ---- The bands ----
+   A drafting sheet's margin: the section number hangs in the margin and the
+   content sits behind a datum line that runs the height of the band. The
+   rule is the alignment, which is why it is a border on the body rather
+   than a decorative element beside it — nothing can drift off it. */
+
+.band {
+  padding: calc(var(--space-6) * 1.5) var(--space-5);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.band-last {
+  border-bottom: 0;
+}
+
+/* Every single-column grid on this page names `minmax(0, 1fr)` rather than
+   leaving the track implicit. An implicit `auto` track takes its base size
+   from its content's minimum, and the command block's longest flag line is
+   wider than a 360px viewport — which pushed the whole band 72px past the
+   right edge until the track was told it may be narrower than its content.
+   The block scrolls inside its own bounds instead, which is what
+   `.commands` was given `overflow-x` for. */
+.band-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  max-width: var(--band-width);
+  margin: 0 auto;
+}
+
+.band-index {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  letter-spacing: 0.12em;
+  color: var(--colour-text-faint);
+}
+
+/* One breakpoint for the whole page, and 48rem is where the drafting margin
+   plus the readings' three columns still leave the prose a usable measure.
+   Three different breakpoints meant a 768px window that had the wide
+   readings row and not the datum line it should hang from. */
+@media (min-width: 48rem) {
+  .band-inner {
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .band-index {
+    /* Aligned to the cap of the h2 beside it rather than its box, which is
+       what makes the number read as a datum label and not a heading. */
+    padding-top: 0.35em;
+  }
+
+  .band-body {
+    border-left: 1px solid var(--colour-rule);
+    padding-left: var(--space-5);
+  }
+}
+
+/* ---- The three readings ----
+   One geometry, three strokes. The difference is dash pattern, never
+   colour: these are three readings of one estate, and every row states its
+   own name next to its line, so nothing is read off a hue (ADR-0047 §5). */
+
+.band-body > .readings {
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--colour-rule);
+}
+
+.reading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.reading-name {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.reading-source {
+  margin: 0;
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
+.trace {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  /* Height from the viewBox, so a narrower column draws a smaller trace
+     rather than letterboxing one inside a fixed band. */
+  height: auto;
+}
+
+/* The datum the reading deviates from. It shows through the gaps in the
+   dashed and dotted strokes, which is what makes a trace read as an
+   instrument's rather than as a squiggle (identity.md: datum lines and
+   hairlines). */
+.trace-datum {
+  stroke: var(--colour-rule);
+  stroke-width: 1;
+}
+
+.trace polyline {
+  fill: none;
+  stroke: var(--colour-text-muted);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* Intended is drawn: a continuous line, because it is one authored
+   document at one commit. */
+.trace-intended polyline {
+  stroke-linecap: round;
+}
+
+/* Effective is reported: the collector answers when asked, in segments. */
+.trace-effective polyline {
+  stroke-dasharray: 11 5;
+}
+
+/* Observed is sampled: discrete arrivals over a window, which is what the
+   reading actually is. */
+.trace-observed polyline {
+  stroke-dasharray: 0.5 5;
+  stroke-linecap: round;
+}
+
+@media (min-width: 48rem) {
+  .reading {
+    grid-template-columns: 7rem 15rem minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-4);
+  }
+}
+
+/* ---- The three rungs ----
+   Rows on hairlines, not a shelf of cards. Each row states its cost, which
+   is the register the whole product is written in (identity.md, "State the
+   cost"). */
+
+.band-body > .rungs {
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--colour-rule);
+}
+
+.rung {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.rung-name {
+  margin: 0;
+  font-size: var(--text-l);
+}
+
+.rung-what {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--colour-text-muted);
+}
+
+.rung-cost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-s);
+  color: var(--colour-text-muted);
+}
+
+@media (min-width: 48rem) {
+  .rung {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    column-gap: var(--space-4);
+  }
+
+  .rung-name {
+    grid-row: span 2;
+  }
+}
+
+/* ---- The principles ----
+   Short declaratives on hairlines. No icons: a glyph beside each of these
+   would be decoration, and every mark in this system is a mapping from a
+   state (design-system.md, "Marks and icons"). */
+
+/* One column, like the readings and the rungs above it. Two columns fitted,
+   and read as a different page: five items in two columns also leaves the
+   fifth alone on a row, which makes a deliberate list look like one that ran
+   out. */
+.principles {
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--colour-rule);
+}
+
+.principles li {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--colour-rule);
+  max-width: var(--measure);
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
+.principles strong {
+  display: block;
+  font-weight: var(--weight-semibold);
+  color: var(--colour-text);
+}
+
+/* ---- The two plates ----
+   The only plates on the page besides the chrome. A plate here frames
+   something the reader can act on — a console to open, a command to run —
+   which is what keeps two of them from reading as a card grid.
+
+   Stacked at every width, and never side by side. Two columns would put
+   them in parallel when they are in sequence: the heading says see it, then
+   run it. It also gives the command block the full measure, so a
+   39-character flag line lands whole instead of scrolling on a laptop. */
+
+.band-body > .plates {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.plate {
+  padding: var(--space-5);
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-2);
+}
+
+/* Reset and rhythm on the same children, for the reason given at the top of
+   this file: a descendant selector would outweigh the `+` rule. */
+.plate > * {
+  margin: 0;
+}
+
+.plate > * + * {
+  margin-top: var(--space-3);
+}
+
+.plate h3 {
+  font-size: var(--text-l);
+}
+
+/* The plate is as wide as the band so the command block is, but its prose
+   keeps the same measure as every other paragraph on the page. */
+.plate p {
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
+.plate-link {
+  font-family: var(--font-mono);
+  font-size: var(--text-l);
+  font-weight: var(--weight-medium);
+  color: var(--colour-text);
+}
+
+/* The commands scroll inside their own bounds rather than widening the
+   page, which is the only way a flag list survives 360px intact. */
+.commands {
+  margin: 0;
+  overflow-x: auto;
+  padding: var(--space-3);
+  background: var(--colour-bg);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-1);
+  font-size: var(--text-s);
+  line-height: var(--leading-snug);
+}
+
+/* ---- The foot ---- */
+
+.foot {
+  max-width: var(--band-width);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) calc(var(--space-6) * 1.5);
+  border-top: 1px solid var(--colour-rule);
   font-size: var(--text-xs);
   color: var(--colour-text-muted);
+}
+
+/* The licence, stated rather than abbreviated: source-available is not open
+   source, and the difference is the reader's to weigh before they invest an
+   afternoon. */
+.licence-note {
+  margin: 0 0 var(--space-5);
+  max-width: var(--measure);
+  font-size: var(--text-s);
+}
+
+/* The colophon and the theme control on one line, wrapping to two when
+   there is no room, because neither is worth truncating. */
+.foot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
 }
 
 .colophon {

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telecraft — coming soon</title>
-<meta name="description" content="Craft, govern, and verify OpenTelemetry across your whole estate. Source-available fleet and policy management for OpenTelemetry — coming soon.">
+<title>Telecraft — craft, govern, and verify OpenTelemetry across your whole estate</title>
+<meta name="description" content="Telecraft models your OpenTelemetry collection topology, composes collector configuration from owned, versioned building blocks, and checks that the telemetry it promised actually arrived. Source-available.">
 <!-- The theme, resolved before the first paint. `tokens.css` carries dark on
      the bare :root so an unstamped document is still complete, which means a
      reader who chose light would otherwise see one dark frame. This is the
@@ -32,8 +32,9 @@
      /favicon.ico request, which a static host answers with a 404. -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <!-- Self-hosted, like everything else (ADR-0019, ADR-0045 §5). The upright is
-     the only face the first paint needs; the italic is unused on this page and
-     the mono carries three words, so neither is worth a preload. -->
+     the only face the first paint needs. The italic is unused on this page,
+     and the mono carries the stamps and the command block, all of which sit
+     below the fold, so neither is worth a preload. -->
 <link rel="preload" href="/assets/fonts/AtkinsonHyperlegibleNext.woff2" as="font" type="font/woff2" crossorigin>
 <!-- Faces, then values, then elements, then structure. The first three are
      copies of the console's, listed in `tools/vendored.json`. -->
@@ -44,19 +45,227 @@
 <script src="/assets/theme.js" defer></script>
 </head>
 <body>
+<!-- The chrome is shared with the documentation site, which generates its
+     pages against exactly this shape: `.topbar` holding an `a.wordmark` and a
+     `nav.topnav`. Change it here and change it there. -->
+<header class="topbar">
+  <a class="wordmark" href="/"><span class="wordmark-lead">Tele</span>craft</a>
+  <nav class="topnav" aria-label="Site">
+    <a href="/docs/">Documentation</a>
+    <a href="https://github.com/telecraft-dev/telecraft">GitHub</a>
+  </nav>
+</header>
+
 <main>
-  <h1 class="wordmark"><span class="wordmark-lead">Tele</span>craft</h1>
-  <svg class="pulse" viewBox="0 0 560 60" role="img" aria-label="telemetry pulse line">
-    <polyline points="0,30 120,30 150,30 165,12 180,48 195,20 210,38 225,30 300,30 330,30 345,8 360,52 375,30 470,30 560,30"/>
-  </svg>
-  <p class="tagline">Craft, govern, and verify OpenTelemetry across your whole
-  estate. Source-available fleet &amp; policy management for OpenTelemetry —
-  nothing in your telemetry path, git as the source of truth.</p>
-  <div class="soon">Coming soon</div>
-  <p class="links">
-    <a href="https://github.com/telecraft-dev/telecraft">Follow the build on GitHub&nbsp;→</a>
-  </p>
-  <footer class="foot">
+  <!-- The blueprint sheet is confined to this section rather than tiled over
+       the whole page: drafting linework is a drawing surface, and a page that
+       keeps it under twelve hundred words of prose has turned it into
+       wallpaper (identity.md rejects decoration that is not measurement). -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 class="wordmark wordmark-display"><span class="wordmark-lead">Tele</span>craft</h1>
+      <svg class="pulse" viewBox="0 0 560 60" role="img" aria-label="telemetry pulse line">
+        <polyline points="0,30 120,30 150,30 165,12 180,48 195,20 210,38 225,30 300,30 330,30 345,8 360,52 375,30 470,30 560,30"/>
+      </svg>
+      <p class="lede">Craft, govern, and verify OpenTelemetry across your whole estate.</p>
+      <p class="hero-note">Telecraft models your collection topology, composes collector
+      configuration from owned, versioned building blocks, and then does the thing no other
+      tool does: it derives from the configuration an expectation of what telemetry should
+      arrive, and checks it. Green means “the configuration worked”, never merely “the
+      configuration applied”.</p>
+      <p class="actions">
+        <a class="action action-lead" href="https://demo.telecraft.dev">See it running&nbsp;→</a>
+        <a class="action" href="/docs/">Read the documentation</a>
+      </p>
+      <p class="status">
+        <span class="stamp">Early software</span>
+        Conformance, authoring and serving all work end to end, with a console over all four
+        workspaces. Interfaces are still free to change.
+      </p>
+    </div>
+  </section>
+
+  <!-- The problem and the three readings are one band, not two: the readings
+       are the answer to the problem and separating them makes the reader hold
+       the question across a section rule. -->
+  <section class="band" aria-labelledby="quiet">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">01</p>
+      <div class="band-body">
+        <h2 id="quiet">An estate fails quietly</h2>
+        <p>A receiver gets wired into the wrong pipeline, a gateway drops an attribute, a team
+        ships a service with no instrumentation, and nothing announces any of it. The dashboard
+        that should have shown the gap is the dashboard nobody built, because nobody knew the
+        gap existed.</p>
+        <p>Tools that read collector configuration can tell you what was asked for. Tools that
+        read a telemetry backend can tell you what turned up. Neither can tell you which of
+        those two facts is the problem, so neither can tell you whose problem it is.</p>
+
+        <h3>Three readings, crossed</h3>
+        <p>Telecraft reads the estate three ways. Each reading has one definition and one
+        source; they compose, and they are never blended.</p>
+        <!-- One geometry, three strokes. The line is the same pulse the hero
+             draws, rendered three times, because the point of the section is
+             that these are three readings of one estate rather than three
+             different things. Pattern carries the difference and each row
+             states its own name beside it, so nothing here is read off a hue
+             (ADR-0047 §5). -->
+        <ul class="readings">
+          <li class="reading">
+            <p class="reading-name">Intended</p>
+            <svg class="trace trace-intended" viewBox="0 0 240 24" aria-hidden="true">
+              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+            </svg>
+            <p class="reading-source">The configuration in git, pinned to a commit SHA rather
+            than a branch tip. A configuration a human committed by hand is Intended too.</p>
+          </li>
+          <li class="reading">
+            <p class="reading-name">Effective</p>
+            <svg class="trace trace-effective" viewBox="0 0 240 24" aria-hidden="true">
+              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+            </svg>
+            <p class="reading-source">The collector’s own report of the configuration it is
+            running. Never what an applier holds, and never what the platform believes it
+            sent.</p>
+          </li>
+          <li class="reading">
+            <p class="reading-name">Observed</p>
+            <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
+              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+            </svg>
+            <p class="reading-source">Telemetry that landed in a backend over a window, read
+            through a seam. Each requirement is judged against the window it asked for.</p>
+          </li>
+        </ul>
+        <p>Crossing them is what turns “this is broken” into “this is broken, and here is who
+        can fix it”. A configured pipeline delivering nothing is a defect for the platform
+        team. An unconfigured service delivering nothing is a governance gap for the workload
+        owner. Both score zero; they need different people and different fixes.</p>
+        <p>Every reading carries a <span class="mono">Known</span> flag, and not knowing is a
+        normal state. A provider that cannot answer says so, with a cause. No evidence is never
+        quietly treated as a pass.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="rungs">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">02</p>
+      <div class="band-body">
+        <h2 id="rungs">Three rungs, adoptable separately</h2>
+        <p>Telecraft is three capabilities that share a model. Adopt any one of them without
+        the others, in any order; a higher rung is never a condition of using a lower one. Each
+        one states what it costs you.</p>
+        <ul class="rungs">
+          <li class="rung">
+            <h3 class="rung-name">Conformance</h3>
+            <p class="rung-what">Reads your telemetry backend and your collectors’ reported
+            configuration, judges every Service against the Requirements that apply to it, and
+            routes each finding to an owner.</p>
+            <p class="rung-cost"><span class="stamp">Costs you</span> a connection string</p>
+          </li>
+          <li class="rung">
+            <h3 class="rung-name">Authoring</h3>
+            <p class="rung-what">Teams compose Blueprints from governed Components, and the
+            renderer compiles the result to plain OpenTelemetry Collector YAML in git as change
+            proposals.</p>
+            <p class="rung-cost"><span class="stamp">Costs you</span> nothing in your delivery
+            path</p>
+          </li>
+          <li class="rung">
+            <h3 class="rung-name">Serving</h3>
+            <p class="rung-what">A stateless OpAMP server delivers rendered configuration from
+            git to collectors, with GitOps as a co-equal alternative, chosen per collector.</p>
+            <p class="rung-cost"><span class="stamp">Costs you</span> an OpAMP Supervisor
+            beside each served collector</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="principles">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">03</p>
+      <div class="band-body">
+        <h2 id="principles">Five principles, and the feature loses</h2>
+        <p>These hold across every part of the product. Where a feature would break one, the
+        feature is the thing that changes.</p>
+        <ul class="principles">
+          <li>
+            <strong>Nothing sits in the telemetry path.</strong>
+            If Telecraft is down, no telemetry stops flowing. The platform is never a
+            collector, a gateway, or a hop.
+          </li>
+          <li>
+            <strong>Git is the source of truth.</strong>
+            History, rollback, approval and audit are git’s, not ours. The console opens change
+            proposals; it never writes to a cluster.
+          </li>
+          <li>
+            <strong>Configurations, never binaries.</strong>
+            No collector distribution, no container image, no chart. Telecraft ships
+            configuration to collectors you already run.
+          </li>
+          <li>
+            <strong>The core is vendor-neutral.</strong>
+            Backends and fleet managers sit behind seams as plugins, and a lint keeps vendor
+            names out of the core, so independence stays greppable.
+          </li>
+          <li>
+            <strong>Air gaps come first.</strong>
+            Nothing depends on a hosted service or on a particular git host.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-last" aria-labelledby="start">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">04</p>
+      <div class="band-body">
+        <h2 id="start">See it, then run it</h2>
+        <!-- The two plates are the only ones on the page besides the chrome.
+             A plate here is a frame around something you can act on, which is
+             what keeps it from becoming a card grid. -->
+        <div class="plates">
+          <div class="plate">
+            <h3>The live demo</h3>
+            <p><a class="plate-link" href="https://demo.telecraft.dev">demo.telecraft.dev</a></p>
+            <p>The real console over a public demo estate: read-only, and rebuilt from git on
+            every push.</p>
+          </div>
+          <div class="plate">
+            <h3>A first verdict</h3>
+            <p>You need Go 1.26 or later and <span class="mono">git</span>. Clone
+            <a href="https://github.com/telecraft-dev/telecraft">telecraft</a> and the public
+            <a href="https://github.com/telecraft-dev/estate-demo">demo estate</a> beside each
+            other, then:</p>
+            <pre class="commands"><code>go build -o telecraft ./cmd/telecraft
+
+./telecraft check \
+  -library ../estate-demo/requirements \
+  -estate ../estate-demo/demo/rows.yaml \
+  -exemptions ../estate-demo/exemptions</code></pre>
+            <p><a href="/docs/">The documentation</a> walks the rest of it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="licence-note">Source-available under the Elastic License 2.0: read it, modify it,
+  and run it in production for your own estate at no cost. Two things the licence does not
+  permit — offering Telecraft to third parties as a hosted or managed service, and removing the
+  licensing notices. It is source-available rather than open source, because the licence is not
+  OSI-approved and calling it open source would be inaccurate.</p>
+  <div class="foot-row">
     <p class="colophon"><a href="https://github.com/telecraft-dev/telecraft/blob/main/LICENSE">Elastic License 2.0</a> · © 2026 the Telecraft project</p>
     <!-- Unhidden by `assets/theme.js`: a control that cannot act is worse
          than no control, and without script the page still resolves to a
@@ -69,7 +278,7 @@
         <option value="dark">Dark</option>
       </select>
     </label>
-  </footer>
-</main>
+  </div>
+</footer>
 </body>
 </html>
