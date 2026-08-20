@@ -2,8 +2,10 @@
   "$comment": [
     "The design system is authored in telecraft-dev/telecraft and copied here.",
     "ADR-0047's consequences call this dependency 'a versioned release, not a",
-    "copy'. There is no release: telecraft has no tagging scheme yet, that is",
-    "telecraft-dev/telecraft#86, and it is being decided elsewhere. These are",
+    "copy'. The scheme now exists — telecraft ADR-0049 defines vMAJOR.MINOR.PATCH",
+    "tags and ships the design system as an archive — but no tag has been cut,",
+    "so there is still nothing to depend on. Point `ref` at the release tag the",
+    "moment one exists (telecraft-dev/telecraft#86). Until then these are",
     "copies with their provenance written down and a check that fails when they",
     "drift. That is the honest description of them, and calling them anything",
     "else would be false.",
@@ -18,8 +20,8 @@
   ],
   "repository": "telecraft-dev/telecraft",
   "raw": "https://raw.githubusercontent.com/telecraft-dev/telecraft",
-  "ref": "feat/base-stylesheet",
-  "commit": "20a87c2b1d6923a8f90ebe5b7f31f6f498bf1bcd",
+  "ref": "main",
+  "commit": "76be0dedfd87232fa9195e0541a387f020b60ade",
   "interim": "telecraft-dev/telecraft#93 is open and unmerged; the tagging scheme this should become is telecraft-dev/telecraft#86",
   "files": [
     {
