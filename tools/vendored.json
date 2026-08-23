@@ -21,13 +21,13 @@
   "repository": "telecraft-dev/telecraft",
   "raw": "https://raw.githubusercontent.com/telecraft-dev/telecraft",
   "ref": "main",
-  "commit": "76be0dedfd87232fa9195e0541a387f020b60ade",
+  "commit": "e59d992cb4a327819f4bbff8a1f8ef6618412d30",
   "interim": "telecraft-dev/telecraft#93 is open and unmerged; the tagging scheme this should become is telecraft-dev/telecraft#86",
   "files": [
     {
       "from": "console/src/tokens.css",
       "to": "assets/tokens.css",
-      "sha256": "3d500864139638648d0906bdc824336375a7ba36509d328fbe4e678f1b16a6e5"
+      "sha256": "bcc7a71a4f80843ddbd05b8be95dd211930729305fd619344defaefcf49e903c"
     },
     {
       "from": "console/src/base.css",
@@ -67,7 +67,7 @@
     {
       "from": "console/public/favicon.svg",
       "to": "favicon.svg",
-      "sha256": "d3451d4e6164fb28204968a945b2298a06cf46e5fe84b4f99f7171e376d51479"
+      "sha256": "147a44ecc6cc8120d5bcbd6bf74d92fe3009e95698623e51189f097c6b75e38e"
     }
   ]
 }
