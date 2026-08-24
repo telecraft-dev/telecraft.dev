@@ -1,12 +1,12 @@
 name: Checks
 
-# Three rules this site cannot break quietly. Nothing here deploys.
+# Four rules this site cannot break quietly. Nothing here deploys.
 #
 # The air gap (ADR-0019, ADR-0045 §5): nothing the browser fetches comes from
 # another origin. It is checked twice, over two different trees. The source
 # tree is what a pull request changes. `_site/` is what a reader is served,
 # and most of it was written in telecraft-dev/telecraft and arrives through
-# `docs/nav.yaml` — a page nobody here reviewed can carry a remote image, and
+# `docs/nav.yaml`. A page nobody here reviewed can carry a remote image, and
 # the source pass cannot see it.
 #
 # The vendored design system: the tokens, the base sheet and the faces are
@@ -16,8 +16,14 @@ name: Checks
 # accident, so the schedule exists as much as the pull-request trigger: drift
 # happens upstream, on a day when nothing changed here.
 #
+# The house style: an em or en dash is never punctuation, which telecraft
+# enforces over its whole tree and this repository did not enforce at all.
+# Eighty-one had accumulated by the time anyone counted, and the one that
+# mattered sat in the front door's `<title>`, which is what a browser prints
+# on the tab. The check runs first and needs nothing installed.
+#
 # The build: `nav.yaml` is the contract, and `npm test` is what asserts the
-# generator still honours it — `not_published`, link resolution, the shared
+# generator still honours it: `not_published`, link resolution, the shared
 # page chrome, and the rule that `docs.css` reads the palette rather than
 # forking it. The weekly run builds against telecraft's `main` as it stands
 # that morning, which is the same thing a deploy would do, without deploying
@@ -52,6 +58,9 @@ jobs:
       # documentation is checked out, so that "the source" means this
       # repository: telecraft's `docs/` is another repository's source and is
       # checked where it matters, in `_site/`, after the build.
+      - name: No dash used as punctuation
+        run: node tools/check-dashes.mjs
+
       - name: Nothing in the source is fetched from another origin
         run: node tools/check-external-assets.mjs
 

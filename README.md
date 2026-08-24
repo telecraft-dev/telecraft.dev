@@ -83,12 +83,12 @@ the pre-paint theme resolver, the mark, the font preload, and the
 stylesheets in the order `fonts.css`, `tokens.css`, `base.css`, then the
 page's own sheet. `scripts/lib/layout.mjs` emits that shell for the
 documentation; `index.html` carries it by hand. They agree by
-convention — change one and change the other.
+convention: change one and change the other.
 
 ## The design system is vendored, and that is interim
 
 The tokens, the base sheet and the faces are authored in
-[telecraft-dev/telecraft](https://github.com/telecraft-dev/telecraft) — one
+[telecraft-dev/telecraft](https://github.com/telecraft-dev/telecraft), one
 implementation, one palette check, one set of accessibility floors. ADR-0047's
 consequences say this repository's dependency on them should be "a versioned
 release, not a copy".
@@ -113,7 +113,7 @@ The check runs on every pull request and weekly, because drift happens
 upstream, on a day when nothing changed here.
 
 While `ref` in `tools/vendored.json` names anything other than `main`, a
-difference against `main` is reported and not failed — a copy of an unmerged
+difference against `main` is reported and not failed, because a copy of an unmerged
 branch is meant to differ from `main`. **Point `ref` at `main` and rerun
 `update` as soon as the source lands**, and drift is fatal again.
 
@@ -136,7 +136,7 @@ branch is meant to differ from `main`. **Point `ref` at `main` and rerun
   `dark`. The inline block in `index.html`, and its twin in
   `scripts/lib/layout.mjs`, stamp the resolution before anything is painted;
   `assets/theme.js` owns every later one. They share the storage key
-  `telecraft.theme` and agree by convention — change one and change the
+  `telecraft.theme` and agree by convention: change one and change the
   other. Without script a page still renders a complete theme, because the
   bare `:root` in `tokens.css` carries dark.
 

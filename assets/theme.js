@@ -5,7 +5,7 @@
  * is the honest default and an on/off switch cannot express it, so the stored
  * value is the *choice* and `data-theme` on the root element is the
  * *resolution* of it. `tokens.css` defines every colour in exactly two blocks
- * — the bare `:root` carrying dark, and `:root[data-theme='light']` — so a
+ * (the bare `:root` carrying dark, and `:root[data-theme='light']`), so a
  * browser that never runs this file still renders a complete theme rather
  * than half of one.
  *

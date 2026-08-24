@@ -5,7 +5,7 @@
  * stylesheet in this repository that is ours to edit.
  *
  * Two rules bind it. Nothing is fetched from another origin, ever
- * (ADR-0019, ADR-0045 §5) — `tools/check-external-assets.mjs` fails the
+ * (ADR-0019, ADR-0045 §5). `tools/check-external-assets.mjs` fails the
  * build if it is. And hue is never load-bearing (ADR-0047 §5): no signal
  * colour and no severity colour appears here at all, which is the simplest
  * way to keep the rule on a page with no data on it. The only colour with a
@@ -207,7 +207,7 @@ a.wordmark:hover {
    about.
 
    The draw is left at the duration it was authored with. `--motion-fast`
-   and `--motion-base` are transition durations — 90ms and 160ms — and a
+   and `--motion-base` are transition durations (90ms and 160ms) and a
    line that draws itself over three seconds is not a transition. */
 
 .pulse {
@@ -307,7 +307,7 @@ a.wordmark:hover {
 }
 
 /* The fill is the accent, and a hover that lightened it would need a second
-   value per theme. The plate holds and the underline does the work — which
+   value per theme. The plate holds and the underline does the work, which
    is also the one signal `base.css` gives a link, given back to a link that
    had traded it for a plate. */
 .action-lead:hover,
@@ -331,7 +331,7 @@ a.wordmark:hover {
 /* A stamp, not a pill: the largest radius in the system is 8px because the
    identity is datum lines and hairlines (design-system.md, "Space, radius,
    focus, motion, elevation"). Set in the mono face, which is where the
-   second family belongs — a stamp reads as an instrument's stamp, and the
+   second family belongs: a stamp reads as an instrument's stamp, and the
    words are a status rather than prose. */
 .stamp {
   flex: none;
@@ -350,7 +350,7 @@ a.wordmark:hover {
    A drafting sheet's margin: the section number hangs in the margin and the
    content sits behind a datum line that runs the height of the band. The
    rule is the alignment, which is why it is a border on the body rather
-   than a decorative element beside it — nothing can drift off it. */
+   than a decorative element beside it, so nothing can drift off it. */
 
 .band {
   padding: calc(var(--space-6) * 1.5) var(--space-5);
@@ -364,7 +364,7 @@ a.wordmark:hover {
 /* Every single-column grid on this page names `minmax(0, 1fr)` rather than
    leaving the track implicit. An implicit `auto` track takes its base size
    from its content's minimum, and the command block's longest flag line is
-   wider than a 360px viewport — which pushed the whole band 72px past the
+   wider than a 360px viewport, which pushed the whole band 72px past the
    right edge until the track was told it may be narrower than its content.
    The block scrolls inside its own bounds instead, which is what
    `.commands` was given `overflow-x` for. */
@@ -572,7 +572,7 @@ a.wordmark:hover {
 
 /* ---- The two plates ----
    The only plates on the page besides the chrome. A plate here frames
-   something the reader can act on — a console to open, a command to run —
+   something the reader can act on (a console to open, a command to run)
    which is what keeps two of them from reading as a card grid.
 
    Stacked at every width, and never side by side. Two columns would put

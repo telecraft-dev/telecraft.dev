@@ -2,42 +2,40 @@
   "$comment": [
     "The design system is authored in telecraft-dev/telecraft and copied here.",
     "ADR-0047's consequences call this dependency 'a versioned release, not a",
-    "copy'. The scheme now exists — telecraft ADR-0049 defines vMAJOR.MINOR.PATCH",
-    "tags and ships the design system as an archive — but no tag has been cut,",
-    "so there is still nothing to depend on. Point `ref` at the release tag the",
-    "moment one exists (telecraft-dev/telecraft#86). Until then these are",
-    "copies with their provenance written down and a check that fails when they",
-    "drift. That is the honest description of them, and calling them anything",
-    "else would be false.",
+    "copy'. It is now exactly that: telecraft tags releases under ADR-0049, and",
+    "`ref` names one. A tag cannot move, so these copies cannot go stale",
+    "underneath anyone, and taking a newer design system is a deliberate act",
+    "with a version number on it.",
     "",
     "`ref` is what the copies were taken from and `commit` is what that ref",
-    "resolved to, because a branch moves and a commit does not. While `ref`",
-    "names anything other than main, `tools/vendor.mjs check` reports the",
-    "difference against main instead of failing on it: a copy of an unmerged",
-    "branch is supposed to differ from main. Point `ref` back at main — or at",
-    "whatever #86 decides — the moment the source lands, and drift is fatal",
-    "again."
+    "resolved to. Both are recorded because a reader checking whether a file is",
+    "current wants the immutable one, and a person choosing what to upgrade to",
+    "wants the readable one.",
+    "",
+    "While `ref` names a release tag, `tools/vendor.mjs check` reports what has",
+    "changed on main since, rather than failing on it: that difference is the",
+    "next release being written, not drift. Point `ref` at main and the copies",
+    "are expected to track main again, and drift is fatal."
   ],
   "repository": "telecraft-dev/telecraft",
   "raw": "https://raw.githubusercontent.com/telecraft-dev/telecraft",
-  "ref": "main",
-  "commit": "e59d992cb4a327819f4bbff8a1f8ef6618412d30",
-  "interim": "telecraft-dev/telecraft#93 is open and unmerged; the tagging scheme this should become is telecraft-dev/telecraft#86",
+  "ref": "v0.4.0",
+  "commit": "3c8950a6207ccc551531165cdc125806076c6df9",
   "files": [
     {
       "from": "console/src/tokens.css",
       "to": "assets/tokens.css",
-      "sha256": "bcc7a71a4f80843ddbd05b8be95dd211930729305fd619344defaefcf49e903c"
+      "sha256": "c935dd333d6bfd04f0eda3417649673f4648f2d00cdeb89e2caf865264d32f4c"
     },
     {
       "from": "console/src/base.css",
       "to": "assets/base.css",
-      "sha256": "7890a2300dfe8056a6cb3018bf0670a7d41f84bf015663bdaa7ff6fc2d075a85"
+      "sha256": "72ddc8d921940029b6b229df282a369a576afea5422c4833d5fc9084ab84e70c"
     },
     {
       "from": "console/src/fonts/fonts.css",
       "to": "assets/fonts/fonts.css",
-      "sha256": "2deb44d0971f57a155723eaa4b46f1fbc4a1828498de9f0565551e33e8507469"
+      "sha256": "9d34a04446b4f264e8696f66c8ddc3a5586a264aa5f4be7899099648d23b3900"
     },
     {
       "from": "console/src/fonts/AtkinsonHyperlegibleNext.woff2",
@@ -67,7 +65,27 @@
     {
       "from": "console/public/favicon.svg",
       "to": "favicon.svg",
-      "sha256": "147a44ecc6cc8120d5bcbd6bf74d92fe3009e95698623e51189f097c6b75e38e"
+      "sha256": "b5e7d4934edc075e2113ceec42ff3e620742b207d72da9ba1b4c200b2282fdc4"
+    },
+    {
+      "from": "console/public/favicon.ico",
+      "to": "favicon.ico",
+      "sha256": "0a295235de374fed21d1f5df3a1599668cc8d6ed53a984c56f9f1546a0045059"
+    },
+    {
+      "from": "console/public/apple-touch-icon.png",
+      "to": "apple-touch-icon.png",
+      "sha256": "0233966cda3432462255ba55827415ba716feb296e786a7db19452b81803817b"
+    },
+    {
+      "from": "console/public/icon-192.png",
+      "to": "icon-192.png",
+      "sha256": "d58d5d0e3cae2d7b607cec5381179e4b34364b03cb401d9150e71fc3fcd1fe2b"
+    },
+    {
+      "from": "console/public/icon-512.png",
+      "to": "icon-512.png",
+      "sha256": "29041576cda80f52498a4b851e4da7c6757a3c1514edc1c53f74c8e449ea4a47"
     }
   ]
 }

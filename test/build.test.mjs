@@ -42,6 +42,26 @@ describe('what gets emitted', () => {
     assert.ok(exists('assets/docs.css'));
   });
 
+  // The icon set is the case that proved this test earns its keep. Adding
+  // four icons to `index.html` without adding them to `SITE_FILES` builds a
+  // site whose head asks for four files the output does not hold, and
+  // nothing anywhere says so: the page renders, the tab just shows the
+  // browser's default. So rather than only listing what should be there, the
+  // test below reads what the head actually asks for.
+  it('serves every icon the head asks for', () => {
+    const head = read('index.html');
+    const hrefs = [...head.matchAll(/<link\b[^>]*\brel="[^"]*icon[^"]*"[^>]*>/g)]
+      .map((tag) => /href="([^"]+)"/.exec(tag[0])?.[1])
+      .filter(Boolean);
+    // If the head ever stops naming icons, this test must fail rather than
+    // pass vacuously over an empty list.
+    assert.ok(hrefs.length >= 2, `the head names ${hrefs.length} icons`);
+    for (const href of hrefs) {
+      assert.ok(href.startsWith('/'), `${href} is not a root-relative URL`);
+      assert.ok(exists(href.slice(1)), `${href} is in the head but not in the output`);
+    }
+  });
+
   // Until this build existed the workflow uploaded the repository root, so
   // everything the site serves was served by accident. Now it is served
   // because it is named, and a file dropping out of the output is a thing a
@@ -50,6 +70,10 @@ describe('what gets emitted', () => {
     for (const file of [
       'index.html',
       'favicon.svg',
+      'favicon.ico',
+      'icon-192.png',
+      'icon-512.png',
+      'apple-touch-icon.png',
       'LICENSE',
       'assets/site.css',
       'assets/docs.css',
@@ -91,7 +115,7 @@ describe('the landing page and a documentation page are the same site', () => {
 
   // Character for character, not merely equivalent. `tokens.css` carries
   // dark on the bare :root, so a reader who chose light sees one dark frame
-  // if this block does not run before the first stylesheet — and sees a
+  // if this block does not run before the first stylesheet, and sees a
   // different frame on each of the two pages if the two blocks disagree.
   it('carries the same pre-paint theme resolver, byte for byte', () => {
     const resolver = (html) => {
@@ -253,8 +277,8 @@ describe('a URL in prose is not a request', () => {
 });
 
 // telecraft.dev does not own telecraft's documentation and cannot fix it in
-// place. One page whose front matter a YAML parser rejects — an unquoted
-// value with a colon in it is the usual way — must not take the site down.
+// place. One page whose front matter a YAML parser rejects (an unquoted
+// value with a colon in it is the usual way) must not take the site down.
 describe('a page whose front matter will not parse', () => {
   let broken;
   before(() => {

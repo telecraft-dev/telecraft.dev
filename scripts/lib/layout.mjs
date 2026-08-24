@@ -8,8 +8,8 @@
 // link from one to the other must not be able to tell that the pages were
 // built by different means: same resolver, same mark, same faces, same
 // three sheets in the same order, same theme control in the same corner.
-// The only thing that differs is the fourth stylesheet — `site.css` there,
-// `docs.css` here — which is the seam ADR-0047 §1 put the split at.
+// The only thing that differs is the fourth stylesheet, `site.css` there and
+// `docs.css` here, which is the seam ADR-0047 §1 put the split at.
 
 import path from 'node:path';
 import { relativeTo } from './markdown.mjs';

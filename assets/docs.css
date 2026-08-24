@@ -1,6 +1,6 @@
 /*
  * The documentation pages, structure only. The fourth sheet in the load
- * order `fonts.css`, `tokens.css`, `base.css`, then this — the same order
+ * order `fonts.css`, `tokens.css`, `base.css`, then this, the same order
  * `index.html` uses, with `site.css` in this slot. Two structures over one
  * set of elements, which is the whole reason ADR-0047 §1 chose a stylesheet
  * over a component library: a React component cannot cross into this
@@ -18,7 +18,7 @@
  *
  * NOTHING NAMES A COLOUR. Every colour in the system is defined in exactly
  * two blocks and never inside a media query (ADR-0047 §2); a colour minted
- * here — or worse, minted here behind `prefers-color-scheme` — would be
+ * here (or worse, minted here behind `prefers-color-scheme`) would be
  * stranded in the unresolved state and would fork the palette besides. So
  * there is no `:root` colour block below and no colour inside the one media
  * query there is.
@@ -32,7 +32,7 @@
    docs/branding/identity.md: datum lines and hairlines, calipers,
    Blueprints as a domain object), drawn by the same two rule tokens at the
    same spacing. The prose sits on a surface above it, so on a documentation
-   page the grid reads in the gutters — which is where a drawing's grid
+   page the grid reads in the gutters, which is where a drawing's grid
    reads anyway. */
 
 :root {
@@ -45,8 +45,8 @@
   --topbar-height: 3.25rem;
 }
 
-/* Every heading on the page is a link target — the table of contents is made
-   of them — and the top bar is sticky, so without this a jump to `#grades`
+/* Every heading on the page is a link target (the table of contents is made
+   of them) and the top bar is sticky, so without this a jump to `#grades`
    puts `Grades` underneath the bar. The offset is the bar plus a line of
    air. */
 html {
@@ -284,8 +284,8 @@ body {
   border-radius: var(--radius-2);
 }
 
-/* Block rhythm. `base.css` withholds it on purpose — "a console panel and a
-   marketing column do not want the same rhythm" — so the prose column sets
+/* Block rhythm. `base.css` withholds it on purpose ("a console panel and a
+   marketing column do not want the same rhythm"), so the prose column sets
    its own, out of the space scale. */
 
 .prose > :first-child {
@@ -306,7 +306,7 @@ body {
 /* The measure. Around 70 characters at --text-base in Atkinson, which is
    where a line stops needing the eye to hunt for the next one. It is set on
    the text blocks rather than on the column so that a table, a code block
-   and a card grid can still use the full width — those are read by
+   and a card grid can still use the full width. Those are read by
    scanning, not by line. */
 .prose p,
 .prose li,
@@ -390,7 +390,7 @@ body {
 
 /* ---- Tables ----
    `base.css` has already collapsed the borders, set the cell padding, and
-   put a rule under the header rather than a fill — the identity is datum
+   put a rule under the header rather than a fill, because the identity is datum
    lines and hairlines. What is left is the wrapper that lets a wide table
    scroll inside the column instead of widening it, and the rules between
    rows. */
@@ -454,8 +454,8 @@ body {
 
    It is drawn in weight and ink strength, not in hue, and that is the
    token layer's decision rather than a taste. There is no syntax palette
-   in `tokens.css`; the only hues it carries are the three severities —
-   which it says in as many words that "nothing else uses" — and the four
+   in `tokens.css`; the only hues it carries are the three severities,
+   which it says in as many words that "nothing else uses", and the four
    signal lanes, which do not survive colour-vision deficiency and are
    never allowed to appear without their lane name (ADR-0047 §5). Minting a
    dozen token colours here to paint keywords would break the rule this
@@ -563,8 +563,8 @@ body {
 }
 
 /* ---- The foot ----
-   The same three things the front door's foot carries — where to edit the
-   page, the colophon, and the theme control — laid out the same way, so a
+   The same three things the front door's foot carries (where to edit the
+   page, the colophon, and the theme control) laid out the same way, so a
    reader who arrives from the landing page finds them where they left them. */
 
 .pagefoot {
