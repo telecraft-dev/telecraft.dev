@@ -125,7 +125,7 @@ export function resolveLink(href, { page, model, warn }) {
     return { href: relativeTo(page.output, known.output) + suffix, external: false };
   }
 
-  // A link to a section directory rather than to a page in it — `read [the
+  // A link to a section directory rather than to a page in it: `read [the
   // guides](../guides/)`, which is how the prose refers to a whole section.
   // It resolves to that section's index, real or generated. Leaving it as a
   // directory happens to work on a host that serves directory indexes, and

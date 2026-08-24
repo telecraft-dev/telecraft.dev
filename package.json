@@ -11,6 +11,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check:external": "node tools/check-external-assets.mjs _site",
+    "check:dashes": "node tools/check-dashes.mjs",
     "check:vendored": "node tools/vendor.mjs check",
     "serve": "node scripts/serve.mjs",
     "test": "node --test"

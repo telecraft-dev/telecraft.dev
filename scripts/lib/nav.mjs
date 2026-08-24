@@ -81,7 +81,7 @@ export function buildModel(docsDir, warn) {
         ({ data, body } = splitFrontMatter(source));
       } catch (error) {
         // Front matter that YAML will not parse. The commonest cause by
-        // far is an unquoted value containing a colon — `description: The
+        // far is an unquoted value containing a colon: `description: The
         // layout: root files, ...` is a nested mapping to a YAML parser
         // and a sentence to everybody else.
         //

@@ -125,15 +125,30 @@ async function main() {
  * uploaded the repository root, so every file here was served whether or not
  * anyone meant it to be; now nothing is served unless it is named below, and
  * a file that stops being served stops silently. Hence the list, and hence
- * the fact that `favicon.svg` and `LICENSE` are on it: the mark is asked for
+ * the fact that the icons and `LICENSE` are on it: every icon is asked for
  * by name in the head of every page, and `/LICENSE` is a URL the site has
  * already been answering.
+ *
+ * The icon set is five files because one is not enough. Safari has not
+ * reliably drawn an SVG favicon, and a browser that falls back asks for
+ * `/favicon.ico`, which a static host answers with a 404. `index.html` names
+ * all five, and `test/build.test.mjs` checks that every icon the head asks
+ * for actually reaches the output, which is the failure this list invites.
  *
  * `CNAME` is optional because the custom domain is presently held in the
  * repository's Pages settings rather than in a file. If one is ever added it
  * has to reach the output, or the first deploy after it drops the domain.
  */
-const SITE_FILES = ['index.html', 'favicon.svg', 'LICENSE', 'CNAME'];
+const SITE_FILES = [
+  'index.html',
+  'favicon.svg',
+  'favicon.ico',
+  'icon-192.png',
+  'icon-512.png',
+  'apple-touch-icon.png',
+  'LICENSE',
+  'CNAME',
+];
 
 function copySiteShell(outDir, warn) {
   for (const name of SITE_FILES) {

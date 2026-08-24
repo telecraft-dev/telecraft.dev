@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telecraft — craft, govern, and verify OpenTelemetry across your whole estate</title>
+<title>Telecraft: craft, govern, and verify OpenTelemetry across your whole estate</title>
 <meta name="description" content="Telecraft models your OpenTelemetry collection topology, composes collector configuration from owned, versioned building blocks, and checks that the telemetry it promised actually arrived. Source-available.">
 <!-- The theme, resolved before the first paint. `tokens.css` carries dark on
      the bare :root so an unstamped document is still complete, which means a
@@ -28,9 +28,17 @@
   })()
 </script>
 <!-- The product's own mark: the card face's three reading bands, stacked and
-     decreasing (identity.md). Naming it here also stops the browser's default
-     /favicon.ico request, which a static host answers with a 404. -->
+     decreasing (identity.md), offered in every format a browser in support
+     will take. The SVG alone was not enough: Safari has not reliably drawn
+     one, and the default /favicon.ico request a static host answers with a
+     404 left the reader looking at the browser's own placeholder. All of it
+     is vendored from telecraft, where one SVG is the source for every
+     format. -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <!-- Self-hosted, like everything else (ADR-0019, ADR-0045 §5). The upright is
      the only face the first paint needs. The italic is unused on this page,
      and the mono carries the stamps and the command block, all of which sit
@@ -262,7 +270,7 @@
 <footer class="foot">
   <p class="licence-note">Source-available under the Elastic License 2.0: read it, modify it,
   and run it in production for your own estate at no cost. Two things the licence does not
-  permit — offering Telecraft to third parties as a hosted or managed service, and removing the
+  permit, offering Telecraft to third parties as a hosted or managed service, and removing the
   licensing notices. It is source-available rather than open source, because the licence is not
   OSI-approved and calling it open source would be inaccurate.</p>
   <div class="foot-row">

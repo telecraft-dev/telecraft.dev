@@ -3,7 +3,7 @@
 // Nothing this site serves may be fetched from another origin: no font CDN,
 // no analytics tag, no hosted stylesheet. The console enforces this with
 // `console/tools/check-zero-cdn.mjs`, which tolerates no external URL in HTML
-// at all — it can afford that, because a console has no reason to link out.
+// at all, and it can afford that, because a console has no reason to link out.
 //
 // A front door does, and a documentation site does far more of it: every
 // "Edit this page on GitHub", every link into the working corpus that
@@ -11,7 +11,7 @@
 // are hyperlinks: places the reader may choose to go, not resources the
 // browser fetches on their behalf, and the rule was never about where a
 // reader is allowed to click. So this check draws the line where the rule
-// actually is — at sub-resources. An external URL is a failure everywhere
+// actually is, at sub-resources. An external URL is a failure everywhere
 // except as the `href` of an `<a>` or an `<area>`, and in CSS wherever
 // `url()` or `@import` can reach.
 //
@@ -27,8 +27,8 @@
 // `<script>`, or the body of a `<style>`. A URL in a text node is a URL
 // somebody wrote down. That distinction did not matter while this site was
 // one hand-written page; it is load-bearing now, because a documentation
-// corpus is largely made of URLs written down — `git clone https://…`, an
-// OTLP endpoint in a YAML listing, a release archive in a table — and every
+// corpus is largely made of URLs written down (`git clone https://…`, an
+// OTLP endpoint in a YAML listing, a release archive in a table) and every
 // one of them is prose that happens to be shaped like an address.
 //
 // XML namespace identifiers are the one exception: `xmlns` is a name, not an
@@ -51,13 +51,13 @@ import process from 'node:process'
 // Every file type a browser can be made to fetch something from. Plain text
 // is absent on purpose: the two OFL licences name the foundries' URLs in
 // their prose, and prose causes no fetch. Markdown is absent for the same
-// reason — nothing here renders it.
+// reason: nothing here renders it.
 const TEXT_EXTENSIONS = new Set(['.html', '.css', '.js', '.mjs', '.svg', '.json', '.webmanifest'])
 
 // Build machinery, and nothing else. Every one of these reaches other hosts
-// by design — `tools/` fetches the vendored design system from GitHub, the
+// by design. `tools/` fetches the vendored design system from GitHub, the
 // test suite plants remote scripts on purpose to prove they are caught, and
-// `package-lock.json` is a registry manifest — and not one byte of any of
+// `package-lock.json` is a registry manifest, and not one byte of any of
 // them is copied into `_site/`. That is the whole justification: the source
 // pass may skip them precisely because the `_site/` pass cannot, and the
 // `_site/` pass is the authoritative one.
@@ -78,7 +78,7 @@ const SKIP = new Set([
 const NAMESPACES = [/^https?:\/\/www\.w3\.org\//]
 const URL_PATTERN = /(?:https?:)?\/\/[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?![a-z0-9.-])[^\s"'`)<>\\]*/gi
 
-// `<a href>` and `<area href>` — the two attributes that name somewhere the
+// `<a href>` and `<area href>`, the two attributes that name somewhere the
 // reader may go rather than something the browser will fetch.
 const LINK_ATTRIBUTE = /<(a|area)\b[^>]*?\shref\s*=\s*(?:"([^"]*)"|'([^']*)')/gi
 
@@ -94,7 +94,7 @@ const EXECUTABLE = new Set(['script', 'style'])
  * wrong in a way that took a real corpus to expose. A quotation mark means
  * "attribute value" inside a tag and means nothing at all inside a comment,
  * so a pattern that treats them alike swallows the apostrophe in a comment
- * like `the console's` and runs on to the next one — in practice several
+ * like `the console's` and runs on to the next one. In practice several
  * thousand characters later, taking half the document into the region with
  * it. Comments are therefore recognised before tags, and quoting is only
  * honoured where quoting exists.
@@ -190,7 +190,7 @@ export async function findExternalReferences(root) {
     // host do not cancel each other out.
     const allowed = new Map()
     // In HTML, only tags and executable bodies are read. Every other file
-    // type here — CSS, JavaScript, SVG, JSON — is fetchable throughout, so
+    // type here (CSS, JavaScript, SVG, JSON) is fetchable throughout, so
     // `regions` stays null and nothing is skipped.
     let regions = null
     if (extname(path) === '.html') {
@@ -237,7 +237,7 @@ if (invokedDirectly) {
   const { scanned, violations } = await findExternalReferences(root)
 
   if (scanned === 0) {
-    console.error(`no text files under ${root} — nothing was checked`)
+    console.error(`no text files under ${root}: nothing was checked`)
     process.exit(2)
   }
   if (violations.length > 0) {
