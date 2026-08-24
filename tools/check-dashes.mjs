@@ -27,8 +27,16 @@ import process from 'node:process'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-/** Em dash and en dash. Both are punctuation here, and neither is allowed. */
-const DASHES = /[—–]/
+/**
+ * Em dash and en dash. Both are punctuation here, and neither is allowed.
+ *
+ * Written as escapes rather than as the characters themselves, because this
+ * file is checked by this rule like every other, and a literal pair here
+ * makes the checker fail on itself. It did, on the first run in CI: the copy
+ * on disk was untracked when it ran locally, so `git ls-files` did not hand
+ * it to itself, and committing it was what made the check see it.
+ */
+const DASHES = /[\u2014\u2013]/
 
 /** Files this repository does not author, held honest by the vendor check. */
 async function exempt() {
@@ -66,7 +74,8 @@ for (const path of tracked()) {
 }
 
 if (problems.length > 0) {
-  console.error(`dash check failed: ${problems.length} dashes used as punctuation.`)
+  const count = problems.length
+  console.error(`dash check failed: ${count} dash${count === 1 ? '' : 'es'} used as punctuation.`)
   console.error('Use a comma, brackets, a colon, or a new sentence; write ranges with "to".\n')
   for (const problem of problems) console.error(`  ${problem}`)
   process.exit(1)
