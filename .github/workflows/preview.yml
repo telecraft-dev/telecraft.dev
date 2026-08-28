@@ -1,0 +1,126 @@
+name: Preview
+
+# A pull request here changes a page somebody reads, and reading a diff of
+# `index.html` is not reading the page. This builds the whole site from the
+# pull request's tree and the documentation on telecraft's `main`, uploads it
+# as an artifact, and comments on the pull request with the two commands that
+# put it in front of you.
+#
+# It is an artifact rather than a URL, deliberately. A per-pull-request URL
+# needs somewhere to serve it. This repository's Pages deployment serves one
+# site and that site is production, and every other host is a third party the
+# review path would then depend on, which is the one thing the whole
+# repository is arranged to avoid. An artifact needs no host, no secret and no
+# service, and it is the same bytes a deploy would publish.
+#
+# `checks.yml` is what says the tree is correct. This says nothing about
+# correctness; it exists so a reviewer can look.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Build a preview of the site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # The documentation source, exactly as a deploy takes it: telecraft's
+      # `main`, and never a ref from anywhere else. A preview built from a
+      # different documentation tree than the one production builds from is a
+      # preview of a site nobody is going to get.
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@v4
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - run: npm ci
+
+      - name: Build the site
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Nothing the built site fetches comes from another origin
+        run: npm run check:external
+
+      # `_site/` holds the landing page, the documentation and every asset,
+      # and it is what `pages.yml` deploys. Downloading it and serving it is
+      # the whole review surface.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: _site
+          retention-days: 14
+          if-no-files-found: error
+
+      # A pull request from a fork gets a read-only token whatever the
+      # `permissions` block above asks for, so this step cannot write and does
+      # not fail the run when it cannot. The artifact is on the run page
+      # either way, which is the thing that matters.
+      - name: Say where the preview is
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- site-preview -->'
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            const slug = `${context.repo.owner}/${context.repo.repo}`
+            const body = [
+              marker,
+              '**Preview of this pull request**',
+              '',
+              `The whole site, built from this branch and the documentation on telecraft's \`main\`, is attached to [this run](${run}) as **site-preview**.`,
+              '',
+              'To look at it, from a checkout of this branch:',
+              '',
+              '```sh',
+              `gh run download ${context.runId} --repo ${slug} --name site-preview --dir _site`,
+              'npm run serve      # http://localhost:4321',
+              '```',
+              '',
+              'Or download the artifact from the run page and open `index.html`.',
+              '',
+              'Kept for 14 days, and rebuilt on every push to this branch.',
+            ].join('\n')
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            })
+            const mine = comments.find((comment) => comment.body && comment.body.includes(marker))
+
+            // One comment per pull request, edited in place. A fresh comment
+            // on every push turns a long review into a wall of build notices.
+            if (mine) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: mine.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              })
+            }

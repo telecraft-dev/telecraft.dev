@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telecraft: craft, govern, and verify OpenTelemetry across your whole estate</title>
-<meta name="description" content="Telecraft models your OpenTelemetry collection topology, composes collector configuration from owned, versioned building blocks, and checks that the telemetry it promised actually arrived. Source-available.">
+<title>Telecraft: know the telemetry you configured actually arrived</title>
+<meta name="description" content="Telecraft is source-available fleet and policy management for OpenTelemetry. It reads what your collectors were told, what they report they are running, and what arrived in your backend, then says which of the three is wrong and who fixes it.">
 <!-- The theme, resolved before the first paint. `tokens.css` carries dark on
      the bare :root so an unstamped document is still complete, which means a
      reader who chose light would otherwise see one dark frame. This is the
@@ -40,10 +40,12 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <!-- Self-hosted, like everything else (ADR-0019, ADR-0045 §5). The upright is
-     the only face the first paint needs. The italic is unused on this page,
-     and the mono carries the stamps and the command block, all of which sit
-     below the fold, so neither is worth a preload. -->
+     the only face the first paint needs. The mono carries the panel labels,
+     the outcome names and the command blocks, and the first of those is now
+     inside the hero, so it is preloaded too. The italic is unused on this
+     page. -->
 <link rel="preload" href="/assets/fonts/AtkinsonHyperlegibleNext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
 <!-- Faces, then values, then elements, then structure. The first three are
      copies of the console's, listed in `tools/vendored.json`. -->
 <link rel="stylesheet" href="/assets/fonts/fonts.css">
@@ -51,6 +53,7 @@
 <link rel="stylesheet" href="/assets/base.css">
 <link rel="stylesheet" href="/assets/site.css">
 <script src="/assets/theme.js" defer></script>
+<script src="/assets/tabs.js" defer></script>
 </head>
 <body>
 <!-- The chrome is shared with the documentation site, which generates its
@@ -71,54 +74,155 @@
        wallpaper (identity.md rejects decoration that is not measurement). -->
   <section class="hero">
     <div class="hero-inner">
-      <h1 class="wordmark wordmark-display"><span class="wordmark-lead">Tele</span>craft</h1>
-      <svg class="pulse" viewBox="0 0 560 60" role="img" aria-label="telemetry pulse line">
-        <polyline points="0,30 120,30 150,30 165,12 180,48 195,20 210,38 225,30 300,30 330,30 345,8 360,52 375,30 470,30 560,30"/>
-      </svg>
-      <p class="lede">Craft, govern, and verify OpenTelemetry across your whole estate.</p>
-      <p class="hero-note">Telecraft models your collection topology, composes collector
-      configuration from owned, versioned building blocks, and then does the thing no other
-      tool does: it derives from the configuration an expectation of what telemetry should
-      arrive, and checks it. Green means “the configuration worked”, never merely “the
-      configuration applied”.</p>
-      <p class="actions">
-        <a class="action action-lead" href="https://demo.telecraft.dev">See it running&nbsp;→</a>
-        <a class="action" href="/docs/">Read the documentation</a>
-      </p>
-      <p class="status">
-        <span class="stamp">Early software</span>
-        Conformance, authoring and serving all work end to end, with a console over all four
-        workspaces. Interfaces are still free to change.
-      </p>
+      <div class="hero-words">
+        <p class="hero-plate">
+          <span class="wordmark wordmark-plate"><span class="wordmark-lead">Tele</span>craft</span>
+          <svg class="pulse" viewBox="0 0 240 24" role="img" aria-label="telemetry pulse line">
+            <polyline points="0,12 52,12 66,12 74,4 82,21 90,7 98,17 106,12 160,12 172,12 180,5 188,20 196,12 240,12"/>
+          </svg>
+        </p>
+        <h1>An OpenTelemetry estate fails quietly.<br><span class="h1-lead">Telecraft is what notices.</span></h1>
+        <p class="lede">Source-available fleet and policy management for OpenTelemetry. Telecraft
+        reads what your collectors were told, what they report they are running, and what
+        arrived in your backend, then says which of the three is wrong and who fixes it.</p>
+        <p class="actions">
+          <a class="action action-lead" href="https://demo.telecraft.dev">See it running</a>
+          <a class="action" href="/docs/guides/quickstart.html">Get a verdict in five minutes</a>
+        </p>
+        <p class="status">
+          <span class="stamp">Early software</span>
+          Conformance, authoring and serving all work end to end, with a console over all four
+          workspaces. Interfaces are still free to change.
+        </p>
+      </div>
+
+      <!-- The product, not a picture of the product. Every panel on this page
+           is built from the same tokens and the same element sheet the console
+           is built from, so what a reader sees here is what they meet when
+           they open the demo. No screenshot: a screenshot goes stale in one
+           theme, at one width, on one release.
+
+           Severity colour is deliberately absent, here and everywhere on this
+           site (ADR-0047 §5, and the note at the top of `site.css`). The
+           outcome is read off a drawn mark and its word, which is the rule the
+           console holds itself to and the reason a card survives greyscale. -->
+      <figure class="panel panel-hero">
+        <figcaption class="panel-head">
+          <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="8" r="1.6" fill="currentColor" stroke="none"/><path d="M8 4.2a5 5 0 0 1 0 7.6"/><path d="M11 2.6a8 8 0 0 1 0 10.8"/></svg>
+          <span class="panel-title">checkout-api</span>
+          <span class="chip">production</span>
+          <span class="chip chip-mono">C1</span>
+        </figcaption>
+        <div class="panel-body">
+          <ul class="readings">
+            <li class="reading">
+              <p class="reading-name">Intended</p>
+              <svg class="trace trace-intended" viewBox="0 0 240 24" aria-hidden="true">
+                <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+              </svg>
+              <p class="reading-value">traces, logs, metrics</p>
+            </li>
+            <li class="reading">
+              <p class="reading-name">Effective</p>
+              <svg class="trace trace-effective" viewBox="0 0 240 24" aria-hidden="true">
+                <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+              </svg>
+              <p class="reading-value">traces, logs, metrics</p>
+            </li>
+            <li class="reading">
+              <p class="reading-name">Observed</p>
+              <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
+                <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+              </svg>
+              <p class="reading-value">traces, logs</p>
+            </li>
+          </ul>
+        </div>
+        <div class="panel-foot">
+          <p class="verdict">
+            <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5 12.5 12.5"/><path d="M12.5 3.5 3.5 12.5"/></svg>
+            <span class="verdict-name">broken_pipeline</span>
+            <span class="verdict-said">Metrics were configured here and none arrived.</span>
+          </p>
+          <p class="verdict-owner"><span class="stamp">Owner</span> platform/ingest</p>
+        </div>
+      </figure>
     </div>
   </section>
 
-  <!-- The problem and the three readings are one band, not two: the readings
-       are the answer to the problem and separating them makes the reader hold
-       the question across a section rule. -->
-  <section class="band" aria-labelledby="quiet">
+  <section class="band" aria-labelledby="gap">
     <div class="band-inner">
       <p class="band-index" aria-hidden="true">01</p>
       <div class="band-body">
-        <h2 id="quiet">An estate fails quietly</h2>
+        <h2 id="gap">The gap nobody owns</h2>
         <p>A receiver gets wired into the wrong pipeline, a gateway drops an attribute, a team
         ships a service with no instrumentation, and nothing announces any of it. The dashboard
         that should have shown the gap is the dashboard nobody built, because nobody knew the
         gap existed.</p>
-        <p>Tools that read collector configuration can tell you what was asked for. Tools that
-        read a telemetry backend can tell you what turned up. Neither can tell you which of
-        those two facts is the problem, so neither can tell you whose problem it is.</p>
 
-        <h3>Three readings, crossed</h3>
+        <!-- Two panels, one question. The question sits between them rather
+             than under them, because the point is that it belongs to neither
+             tool: each panel is telling the truth and the answer is not in
+             either one. -->
+        <div class="two-up">
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">Your configuration tools say</span>
+            </figcaption>
+            <div class="panel-body">
+              <pre class="excerpt"><code>service:
+  pipelines:
+    metrics:
+      receivers:  [otlp]
+      processors: [batch]
+      exporters:  [otlphttp]</code></pre>
+              <p class="panel-note">
+                <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
+                Applied, on every collector.
+              </p>
+            </div>
+          </figure>
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">Your backend says</span>
+            </figcaption>
+            <div class="panel-body">
+              <pre class="excerpt"><code>service.name: checkout-api
+traces   1.2M spans / 15m
+logs     840k records / 15m
+metrics  0</code></pre>
+              <p class="panel-note">
+                <svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg>
+                A gap, and no cause.
+              </p>
+            </div>
+          </figure>
+        </div>
+        <p class="two-up-note">Tools that read collector configuration tell you what was asked
+        for. Tools that read a telemetry backend tell you what turned up. Neither tells you
+        which of those two facts is the problem, so neither tells you whose problem it is.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="crossed">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">02</p>
+      <div class="band-body">
+        <h2 id="crossed">Three readings, crossed</h2>
         <p>Telecraft reads the estate three ways. Each reading has one definition and one
         source; they compose, and they are never blended.</p>
+
         <!-- One geometry, three strokes. The line is the same pulse the hero
              draws, rendered three times, because the point of the section is
              that these are three readings of one estate rather than three
              different things. Pattern carries the difference and each row
              states its own name beside it, so nothing here is read off a hue
              (ADR-0047 §5). -->
-        <ul class="readings">
+        <ul class="readings readings-explained">
           <li class="reading">
             <p class="reading-name">Intended</p>
             <svg class="trace trace-intended" viewBox="0 0 240 24" aria-hidden="true">
@@ -148,10 +252,78 @@
             through a seam. Each requirement is judged against the window it asked for.</p>
           </li>
         </ul>
-        <p>Crossing them is what turns “this is broken” into “this is broken, and here is who
-        can fix it”. A configured pipeline delivering nothing is a defect for the platform
-        team. An unconfigured service delivering nothing is a governance gap for the workload
-        owner. Both score zero; they need different people and different fixes.</p>
+
+        <h3>Seven outcomes, because “no logs arrived” is not one situation</h3>
+        <p>Crossing Effective with Observed, per requirement, is what turns “this is broken”
+        into “this is broken, and here is who can fix it”.</p>
+
+        <!-- The cross, as the product computes it. A table, because it is one:
+             two readings in, one outcome out, and the reader can check the
+             row against the console. The outcome names are the identifiers
+             the API and the CLI print, so they are set in the mono face and
+             spelled exactly as they are spelled everywhere else. -->
+        <div class="cross-scroll">
+          <table class="cross">
+            <caption class="cross-caption">The outcome cross</caption>
+            <thead>
+              <tr>
+                <th scope="col">Effective</th>
+                <th scope="col">Observed</th>
+                <th scope="col">Outcome</th>
+                <th scope="col">What it diagnoses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="cross-in">yes</td>
+                <td class="cross-in">yes</td>
+                <td class="cross-out"><span class="mono">compliant</span></td>
+                <td>The requirement is met.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">yes</td>
+                <td class="cross-in">no</td>
+                <td class="cross-out"><span class="mono">broken_pipeline</span></td>
+                <td>Somebody configured this and it is not working.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">no</td>
+                <td class="cross-in">no</td>
+                <td class="cross-out"><span class="mono">not_configured</span></td>
+                <td>An unmet requirement. The owner needs to instrument.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">no</td>
+                <td class="cross-in">yes</td>
+                <td class="cross-out"><span class="mono">ungoverned</span></td>
+                <td>Telemetry is arriving from something nobody configured.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">unknown</td>
+                <td class="cross-in">no</td>
+                <td class="cross-out"><span class="mono">not_delivered</span></td>
+                <td>Nothing arrived, and no Effective reading explains why.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">no</td>
+                <td class="cross-in">unknown</td>
+                <td class="cross-out"><span class="mono">misconfigured</span></td>
+                <td>A configuration assertion failed, with no signal reading to cross it
+                against.</td>
+              </tr>
+              <tr>
+                <td class="cross-in">unknown</td>
+                <td class="cross-in">unknown</td>
+                <td class="cross-out"><span class="mono">unknown</span></td>
+                <td>No evidence from any reading. Never treated as a pass.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>A configured pipeline delivering nothing is a defect for the platform team. An
+        unconfigured service delivering nothing is a governance gap for the workload owner.
+        Both score zero; they need different people and different fixes.</p>
         <p>Every reading carries a <span class="mono">Known</span> flag, and not knowing is a
         normal state. A provider that cannot answer says so, with a cause. No evidence is never
         quietly treated as a pass.</p>
@@ -159,14 +331,249 @@
     </div>
   </section>
 
-  <section class="band" aria-labelledby="rungs">
+  <section class="band" aria-labelledby="shape">
     <div class="band-inner">
-      <p class="band-index" aria-hidden="true">02</p>
+      <p class="band-index" aria-hidden="true">03</p>
       <div class="band-body">
-        <h2 id="rungs">Three rungs, adoptable separately</h2>
-        <p>Telecraft is three capabilities that share a model. Adopt any one of them without
-        the others, in any order; a higher rung is never a condition of using a lower one. Each
-        one states what it costs you.</p>
+        <h2 id="shape">One binary. A command, or a platform.</h2>
+        <p>There is nothing else to install. The same artefact answers a question in your
+        pipeline and serves the console your teams sign in to, over the same estate, producing
+        the same verdicts.</p>
+
+        <div class="two-up two-up-tall">
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">The command</span>
+              <span class="chip chip-mono">telecraft check</span>
+            </figcaption>
+            <div class="panel-body">
+              <pre class="terminal"><code><span class="term-cmd">$ telecraft check \
+    -library ./requirements \
+    -estate ./rows.yaml</span>
+<span class="term-out">rows                5
+failing_rows        4
+counting_failures   4
+waived              0
+library_drift       0</span>
+<span class="term-cmd">$ echo $?</span>
+<span class="term-out">1</span></code></pre>
+              <p class="panel-note">One JSON report on standard output, and an exit code taken
+              from the result. It runs in CI, in a cron job, or on a laptop.</p>
+            </div>
+            <div class="panel-foot">
+              <p class="panel-cost"><span class="stamp">Costs you</span> a connection string</p>
+            </div>
+          </figure>
+
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">The platform</span>
+              <span class="chip chip-mono">telecraft serve</span>
+            </figcaption>
+            <div class="panel-body">
+              <!-- The console's own chrome, drawn at a size that fits a
+                   column: a workspace strip, an environment lens, and one
+                   row of the shelf. It is not a screenshot and does not
+                   pretend to be interactive; it is the shape a reader will
+                   recognise when they open the demo. -->
+              <div class="console">
+                <div class="console-chrome">
+                  <span class="console-mark"><span class="wordmark-lead">Tele</span>craft</span>
+                  <span class="console-tabs">
+                    <span class="console-tab console-tab-on">Conformance</span>
+                    <span class="console-tab">Authoring</span>
+                    <span class="console-tab">Delivery</span>
+                    <span class="console-tab">Governance</span>
+                  </span>
+                </div>
+                <div class="console-lens">
+                  <span class="chip chip-mono">production</span>
+                  <span class="console-meta">4 Services · 6 Tiers</span>
+                </div>
+                <ul class="console-shelf">
+                  <li class="console-card">
+                    <p class="console-card-name">checkout-api</p>
+                    <p class="console-card-band"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg> traces</p>
+                    <p class="console-card-band"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg> logs</p>
+                    <p class="console-card-band"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5 12.5 12.5"/><path d="M12.5 3.5 3.5 12.5"/></svg> metrics</p>
+                  </li>
+                  <li class="console-card">
+                    <p class="console-card-name">basket-svc</p>
+                    <p class="console-card-band"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg> traces</p>
+                    <p class="console-card-band"><svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg> logs</p>
+                    <p class="console-card-band"><svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 8h10.8"/></svg> metrics</p>
+                  </li>
+                </ul>
+              </div>
+              <p class="panel-note">The console, the platform API and the OpAMP endpoint, from
+              one process over one estate. Sign-in, health probes, and no state that outlives
+              a restart.</p>
+            </div>
+            <div class="panel-foot">
+              <p class="panel-cost"><span class="stamp">Costs you</span> one process, and a
+              Supervisor beside each served collector</p>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="run">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">04</p>
+      <div class="band-body">
+        <h2 id="run">Run it yourself, or let us run it</h2>
+        <p>The same release either way. Nothing sits in the telemetry path in either shape, and
+        your estate is a git repository you own in both.</p>
+
+        <!-- Tabs, and both panels are in the document. Without script the
+             reader gets both diagrams under their own headings, which is the
+             whole content; `assets/tabs.js` is what turns them into a choice.
+             A control that cannot act is worse than no control, so the tab
+             list is `hidden` until the script unhides it, exactly as the
+             theme control is. -->
+        <div class="tabs" data-tabs>
+          <div class="tablist" role="tablist" aria-label="Deployment shape" hidden>
+            <button type="button" class="tab" role="tab" id="tab-cloud" aria-controls="panel-cloud" aria-selected="true">Cloud</button>
+            <button type="button" class="tab" role="tab" id="tab-self" aria-controls="panel-self" aria-selected="false">Self-managed</button>
+          </div>
+
+          <section class="tabpanel" id="panel-cloud" role="tabpanel" aria-labelledby="tab-cloud" tabindex="0">
+            <h3 class="tabpanel-title">Cloud</h3>
+            <p>One Organisation is one Instance at an address of its own,
+            <span class="mono">your-name.app.telecraft.dev</span>, with its own estate and its
+            own people. It runs Standard Edition, which is the whole product: there is no
+            capability here that a deployment of the same release on your own hardware does not
+            have. What you are buying is the running of it.</p>
+
+            <!-- The two diagrams are the same drawing with one boundary moved,
+                 which is the only difference the two shapes have. Drawn in
+                 HTML rather than as an SVG so the labels stay real text at a
+                 real size: a 640-unit viewBox scaled into a 360px viewport
+                 renders its 12px labels at under 7px. -->
+            <figure class="topology">
+              <div class="topo-zone topo-zone-yours">
+                <p class="topo-zone-name">Your infrastructure</p>
+                <div class="topo-path">
+                  <p class="topo-path-name">The telemetry path</p>
+                  <div class="topo-flow">
+                    <span class="topo-node">Your services</span>
+                    <span class="topo-node">Your collectors</span>
+                    <span class="topo-node">Your backend</span>
+                  </div>
+                  <p class="topo-path-note">Telecraft is not on this line. If it stops, none of
+                  this stops.</p>
+                </div>
+                <div class="topo-store">
+                  <span class="topo-node topo-node-store">Your estate, in git</span>
+                  <span class="topo-store-note">Hosted for you, or a repository you already
+                  own. Cloning it is a complete backup.</span>
+                </div>
+              </div>
+              <div class="topo-zone topo-zone-ours">
+                <p class="topo-zone-name">app.telecraft.dev</p>
+                <div class="topo-flow">
+                  <span class="topo-node topo-node-lead">Your Instance</span>
+                  <span class="topo-node">Console and API</span>
+                </div>
+                <p class="topo-reads">Reads the estate, reads your backend, reads what your
+                collectors report.</p>
+              </div>
+            </figure>
+
+            <ul class="facts">
+              <li><span class="facts-key">Who runs it</span> <span class="facts-value">We do. The address, the
+              certificate, the upgrades, the backups, and somebody whose job it is to
+              notice.</span></li>
+              <li><span class="facts-key">Signing in</span> <span class="facts-value">Google or Microsoft Entra ID to
+              begin with, and your own provider added by a change to your estate.</span></li>
+              <li><span class="facts-key">Getting one</span> <span class="facts-value">Sign-up is a request, not a form
+              that provisions. A person reads it and merges it, so you wait for us rather than
+              for a machine.</span></li>
+              <li><span class="facts-key">Serving</span> <span class="facts-value">Not offered here yet. Hosted
+              Organisations read, judge and deliver through git, and the OpAMP endpoint is not
+              published on the internet.</span></li>
+              <li><span class="facts-key">Leaving</span> <span class="facts-value"><span class="mono">git clone</span>.
+              There is no export format, because the estate is the whole of your authored work
+              and a clone is a complete copy of it.</span></li>
+              <li><span class="facts-key">Costs you</span> <span class="facts-value">A subscription for the Organisation.
+              Nothing about your estate is counted.</span></li>
+            </ul>
+            <p class="tabpanel-more"><a href="/docs/guides/hosted.html">How the hosted service
+            works</a></p>
+          </section>
+
+          <section class="tabpanel" id="panel-self" role="tabpanel" aria-labelledby="tab-self" tabindex="0">
+            <h3 class="tabpanel-title">Self-managed</h3>
+            <p>One container image, one Helm chart, or one binary you build. It needs a git
+            repository and a connection to your telemetry backend, and it needs nothing that we
+            operate. An air-gapped deployment is a first-class shape: nothing
+            phones home, and no start-up path reaches the internet.</p>
+
+            <figure class="topology">
+              <div class="topo-zone topo-zone-yours topo-zone-whole">
+                <p class="topo-zone-name">Your infrastructure</p>
+                <div class="topo-path">
+                  <p class="topo-path-name">The telemetry path</p>
+                  <div class="topo-flow">
+                    <span class="topo-node">Your services</span>
+                    <span class="topo-node">Your collectors</span>
+                    <span class="topo-node">Your backend</span>
+                  </div>
+                  <p class="topo-path-note">Telecraft is not on this line. If it stops, none of
+                  this stops.</p>
+                </div>
+                <div class="topo-store">
+                  <span class="topo-node topo-node-store">Your estate, in git</span>
+                  <span class="topo-store-note">Your repository, your forge, your review
+                  rules.</span>
+                </div>
+                <div class="topo-flow">
+                  <span class="topo-node topo-node-lead">Telecraft Instance</span>
+                  <span class="topo-node">Console and API</span>
+                </div>
+                <p class="topo-reads">One process, on your hardware, inside your boundary.</p>
+              </div>
+            </figure>
+
+            <pre class="terminal"><code><span class="term-cmd">$ helm install telecraft oci://ghcr.io/telecraft-dev/charts/telecraft \
+    --namespace telecraft --create-namespace \
+    --set estate.sync.repo=https://forge.example/acme/estate.git</span></code></pre>
+
+            <ul class="facts">
+              <li><span class="facts-key">Who runs it</span> <span class="facts-value">You do, on your own hardware, at
+              your own address.</span></li>
+              <li><span class="facts-key">Getting it</span> <span class="facts-value">The chart above, the image at
+              <span class="mono">ghcr.io/telecraft-dev/telecraft</span>, or a binary you build
+              from source.</span></li>
+              <li><span class="facts-key">Signing in</span> <span class="facts-value">Basic auth to bootstrap, then any
+              OIDC provider you author into the estate.</span></li>
+              <li><span class="facts-key">Serving</span> <span class="facts-value">All of it. The OpAMP endpoint is
+              yours, beside the console, on a port you choose.</span></li>
+              <li><span class="facts-key">Air gaps</span> <span class="facts-value">First class. There is no licence
+              server to reach and no telemetry sent back.</span></li>
+              <li><span class="facts-key">Costs you</span> <span class="facts-value">Nothing. Standard Edition is
+              unrestricted in production and commercially.</span></li>
+            </ul>
+            <p class="tabpanel-more"><a href="/docs/guides/deploy-on-kubernetes.html">Deploy on
+            Kubernetes</a>, <a href="/docs/guides/run-the-container-image.html">run the
+            container image</a>, or <a href="/docs/guides/run-an-instance.html">run an
+            Instance</a></p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="parts">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">05</p>
+      <div class="band-body">
+        <h2 id="parts">Three parts, adopted separately</h2>
+        <p>Telecraft is three capabilities that share one model. Adopt any one of them without
+        the others, in any order; using one is never a condition of using another. Each one
+        states what it costs you.</p>
         <ul class="rungs">
           <li class="rung">
             <h3 class="rung-name">Conformance</h3>
@@ -195,28 +602,27 @@
     </div>
   </section>
 
-  <section class="band" aria-labelledby="principles">
+  <section class="band" aria-labelledby="promises">
     <div class="band-inner">
-      <p class="band-index" aria-hidden="true">03</p>
+      <p class="band-index" aria-hidden="true">06</p>
       <div class="band-body">
-        <h2 id="principles">Five principles, and the feature loses</h2>
-        <p>These hold across every part of the product. Where a feature would break one, the
-        feature is the thing that changes.</p>
+        <h2 id="promises">Five things that stay true</h2>
+        <p>These hold across every part of the product, in every deployment shape.</p>
         <ul class="principles">
           <li>
             <strong>Nothing sits in the telemetry path.</strong>
-            If Telecraft is down, no telemetry stops flowing. The platform is never a
-            collector, a gateway, or a hop.
+            If Telecraft is down, no telemetry stops flowing. It is never a collector, a
+            gateway, or a hop.
           </li>
           <li>
             <strong>Git is the source of truth.</strong>
-            History, rollback, approval and audit are git’s, not ours. The console opens change
+            History, rollback, approval and audit come from git. The console opens change
             proposals; it never writes to a cluster.
           </li>
           <li>
             <strong>Configurations, never binaries.</strong>
-            No collector distribution, no container image, no chart. Telecraft ships
-            configuration to collectors you already run.
+            No collector distribution, no container image of your collectors, no chart.
+            Telecraft ships configuration to collectors you already run.
           </li>
           <li>
             <strong>The core is vendor-neutral.</strong>
@@ -234,18 +640,19 @@
 
   <section class="band band-last" aria-labelledby="start">
     <div class="band-inner">
-      <p class="band-index" aria-hidden="true">04</p>
+      <p class="band-index" aria-hidden="true">07</p>
       <div class="band-body">
         <h2 id="start">See it, then run it</h2>
-        <!-- The two plates are the only ones on the page besides the chrome.
-             A plate here is a frame around something you can act on, which is
-             what keeps it from becoming a card grid. -->
+        <!-- Two plates, stacked and in sequence, because the heading says see
+             it then run it. A plate here frames something the reader can act
+             on, which is what keeps two of them from reading as a card grid. -->
         <div class="plates">
           <div class="plate">
             <h3>The live demo</h3>
             <p><a class="plate-link" href="https://demo.telecraft.dev">demo.telecraft.dev</a></p>
-            <p>The real console over a public demo estate: read-only, and rebuilt from git on
-            every push.</p>
+            <p>The real console over a public demo estate: read-only, no sign-in, and built
+            from the latest release rather than from <span class="mono">main</span>, so it
+            shows what you can run today.</p>
           </div>
           <div class="plate">
             <h3>A first verdict</h3>
@@ -259,7 +666,8 @@
   -library ../estate-demo/requirements \
   -estate ../estate-demo/demo/rows.yaml \
   -exemptions ../estate-demo/exemptions</code></pre>
-            <p><a href="/docs/">The documentation</a> walks the rest of it.</p>
+            <p>The <a href="/docs/guides/quickstart.html">quickstart</a> walks the rest of it,
+            and the <a href="/docs/">documentation</a> covers everything else.</p>
           </div>
         </div>
       </div>
@@ -268,11 +676,14 @@
 </main>
 
 <footer class="foot">
+  <!-- The licence, stated rather than abbreviated. What it permits and what
+       it withholds are the reader's to weigh before they invest an afternoon;
+       why the project chose those words is not a thing a front door argues on
+       screen. -->
   <p class="licence-note">Source-available under the Elastic License 2.0: read it, modify it,
   and run it in production for your own estate at no cost. Two things the licence does not
   permit, offering Telecraft to third parties as a hosted or managed service, and removing the
-  licensing notices. It is source-available rather than open source, because the licence is not
-  OSI-approved and calling it open source would be inaccurate.</p>
+  licensing notices. It is source-available, not open source.</p>
   <div class="foot-row">
     <p class="colophon"><a href="https://github.com/telecraft-dev/telecraft/blob/main/LICENSE">Elastic License 2.0</a> · © 2026 the Telecraft project</p>
     <!-- Unhidden by `assets/theme.js`: a control that cannot act is worse

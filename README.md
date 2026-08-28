@@ -32,6 +32,7 @@ here: change `nav.yaml` and the site changes.
 | `assets/site.css` | The landing page's structure |
 | `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
+| `assets/tabs.js` | The landing page's deployment tabs, which are two stacked sections without it |
 | `assets/tokens.css` | Vendored. Values only, no selectors |
 | `assets/base.css` | Vendored. The element layer: typography, links, code, tables, controls, focus rings |
 | `assets/fonts/` | Vendored. Two families, three faces, subset and self-hosted, with their licences |
@@ -46,6 +47,16 @@ here: change `nav.yaml` and the site changes.
 `assets/site.css` and `assets/docs.css` are the two stylesheets here that
 are ours to edit. Both are structure over the vendored element layer, and
 neither invents a colour.
+
+The landing page shows the product rather than describing it: the verdict
+panel, the console strip, the outcome cross and the two deployment diagrams
+are built from the vendored tokens and element sheet, so they cannot disagree
+with the console about a colour or a face, and they stay right in both themes
+at every width. No screenshot is used, and none should be: a screenshot is
+correct in one theme, at one width, on one release. Every outcome on the page
+is drawn as one of the state marks with its word beside it, and no severity or
+signal colour appears anywhere, which is what keeps the page inside ADR-0047
+§5 while carrying product surfaces.
 
 ## How the build works
 
@@ -208,6 +219,16 @@ which commit asked for the build.
 
 `.github/workflows/checks.yml` runs the same rules on every pull request
 and weekly, and deploys nothing.
+
+`.github/workflows/preview.yml` builds the whole site on every pull request
+and uploads `_site/` as the **site-preview** artifact, then comments on the
+pull request with the two commands that put it in front of you. Reading a diff
+of `index.html` is not reading the page, and this is how a reviewer looks at
+one. It is an artifact rather than a URL because a per-pull-request URL needs a
+host: Pages here serves production, and anything else is a third party the
+review path would depend on. A pull request from a fork gets a read-only token,
+so the comment step is skipped there and the artifact is still on the run
+page.
 
 ## Licence
 
