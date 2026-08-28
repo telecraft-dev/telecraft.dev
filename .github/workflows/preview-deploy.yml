@@ -1,0 +1,169 @@
+name: Preview deploy
+
+# Stage two of two: publish the site `preview.yml` built, and say where it
+# went.
+#
+# Why this is a second workflow, and not two more steps in the first one.
+# Deploying needs a credential, and stage one runs code from the pull
+# request's branch, which may come from a fork. A `workflow_run` workflow runs
+# the copy of this file that is on the default branch, whatever the branch
+# under review says, and it is the only trigger besides `pull_request_target`
+# that is given a writable token. Between those two, this is the one that also
+# refuses to check the branch out: the only thing that crosses from stage one
+# is an artifact, unpacked as data and never executed.
+#
+# So a pull request cannot reach the Cloudflare token by editing a workflow,
+# by adding a dependency with an install script, or by any other route that
+# needs its own code to run. It cannot edit this file's behaviour at all.
+#
+# Where the previews live, and why not under telecraft.dev. A preview of a
+# fork's pull request is untrusted HTML. `pages.dev` is on the Public Suffix
+# List, so one preview cannot set a cookie that reaches another, or reach
+# anything of ours. A `preview.telecraft.dev` would put that same untrusted
+# HTML inside the zone, which is the hole ADR-0072 §2 submitted
+# `app.telecraft.dev` to the Public Suffix List to close. Previews stay on the
+# vendor's own domain, deliberately.
+
+on:
+  workflow_run:
+    workflows: ['Preview']
+    types: [completed]
+
+permissions:
+  contents: read
+
+env:
+  # The Pages project, which decides the hostname: `<project>.pages.dev`.
+  # Created once, by hand, with `wrangler pages project create`; the README
+  # records the command. A workflow that created it on demand would be a
+  # workflow that can create Pages projects.
+  PAGES_PROJECT: telecraft-dev
+
+jobs:
+  deploy:
+    name: Publish the preview
+    # Only a successful build, and only one that came from a pull request. A
+    # manual run of stage one has no pull request to comment on and nothing to
+    # name a preview branch after.
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      # Read the artifacts of the run that triggered this one.
+      actions: read
+      # Comment on the pull request, and put the link beside the checks.
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Take the built site from the build run
+        uses: actions/download-artifact@v4
+        with:
+          name: site-preview
+          path: _site
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Take the pull request number from the build run
+        uses: actions/download-artifact@v4
+        with:
+          name: preview-meta
+          path: meta
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The number is read as a number. It arrived from a run that executed
+      # branch code, so it is input: anything that is not digits stops the job
+      # here rather than reaching a shell, a URL, or an API call.
+      - name: Read the pull request number
+        id: pr
+        run: |
+          set -euo pipefail
+          number="$(tr -dc '0-9' < meta/pr-number)"
+          if [ -z "$number" ]; then
+            echo "no pull request number in the build run's artifact" >&2
+            exit 1
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          echo "alias=pr-$number" >> "$GITHUB_OUTPUT"
+
+      # Pinned exactly, like every dependency in `package.json`. Wrangler is
+      # fetched rather than added to the project because nothing in this
+      # repository builds with it: it is deployment tooling, and putting it in
+      # `package.json` would put it in every contributor's `npm ci`.
+      - name: Publish to Cloudflare Pages
+        id: publish
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BRANCH: ${{ steps.pr.outputs.alias }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.127.0 pages deploy _site \
+            --project-name "$PAGES_PROJECT" \
+            --branch "$BRANCH" \
+            --commit-dirty=true
+
+      # The alias URL, not the per-deployment hash. Cloudflare points
+      # `<branch>.<project>.pages.dev` at that branch's latest deployment, so
+      # this link stays right as the pull request is pushed to, and a reviewer
+      # who bookmarked it is never reading a stale build.
+      - name: Say where the preview is
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PREVIEW_URL: https://${{ steps.pr.outputs.alias }}.${{ env.PAGES_PROJECT }}.pages.dev
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          BUILD_RUN: ${{ github.event.workflow_run.id }}
+        with:
+          script: |
+            const marker = '<!-- site-preview -->'
+            const number = Number(process.env.PR_NUMBER)
+            const url = process.env.PREVIEW_URL
+            const build = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.BUILD_RUN}`
+            const body = [
+              marker,
+              `**Preview:** ${url}`,
+              '',
+              `The whole site, built from this branch and the documentation on telecraft's \`main\`. The link points at this pull request's latest build, so it stays right as you push.`,
+              '',
+              `Landing page at \`/\`, documentation at \`/docs/\`. Built by [this run](${build}), which also attaches \`_site\` as an artifact if you would rather serve it yourself.`,
+            ].join('\n')
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              per_page: 100,
+            })
+            const mine = comments.find((comment) => comment.body && comment.body.includes(marker))
+
+            // One comment per pull request, edited in place. A fresh comment
+            // on every push turns a long review into a wall of build notices.
+            if (mine) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: mine.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body,
+              })
+            }
+
+            // Also beside the checks, where somebody scanning the pull request
+            // for whether it is safe to merge is already looking.
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: process.env.HEAD_SHA,
+              state: 'success',
+              context: 'preview',
+              target_url: url,
+              description: 'The site as this branch builds it',
+            })

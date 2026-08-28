@@ -220,15 +220,68 @@ which commit asked for the build.
 `.github/workflows/checks.yml` runs the same rules on every pull request
 and weekly, and deploys nothing.
 
-`.github/workflows/preview.yml` builds the whole site on every pull request
-and uploads `_site/` as the **site-preview** artifact, then comments on the
-pull request with the two commands that put it in front of you. Reading a diff
-of `index.html` is not reading the page, and this is how a reviewer looks at
-one. It is an artifact rather than a URL because a per-pull-request URL needs a
-host: Pages here serves production, and anything else is a third party the
-review path would depend on. A pull request from a fork gets a read-only token,
-so the comment step is skipped there and the artifact is still on the run
-page.
+## How a pull request is previewed
+
+Reading a diff of `index.html` is not reading the page, so every pull request
+gets the whole site at a URL, on Cloudflare Pages, at
+`https://pr-<number>.telecraft-dev.pages.dev`. The link points at that pull
+request's latest build and stays right as you push. It is posted as one
+comment, edited in place, and set as the `preview` commit status beside the
+checks.
+
+It is two workflows, and the split is the security design rather than an
+accident of structure.
+
+| Workflow | Trigger | Holds a credential |
+|---|---|---|
+| `.github/workflows/preview.yml` | `pull_request` | No |
+| `.github/workflows/preview-deploy.yml` | `workflow_run` on the above | Yes |
+
+The build stage runs code from the branch under review: `npm ci` executes
+whatever that branch's lockfile resolves to, and the branch may come from a
+fork. So it runs with a read-only token, holds no secret, and only uploads
+`_site/` and the pull request number as artifacts. The deploy stage is a
+`workflow_run` workflow, which always runs the copy on the default branch
+whatever the branch under review says, and it never checks that branch out:
+the artifact crosses as data and is never executed. A pull request cannot
+reach the Cloudflare token by editing a workflow, by adding a dependency with
+an install script, or by any other route that needs its own code to run.
+
+**Previews are on `pages.dev` and never under `telecraft.dev`.** A preview of a
+fork's pull request is untrusted HTML. `pages.dev` is on the Public Suffix
+List, so one preview cannot set a cookie that reaches another or anything of
+ours. A `preview.telecraft.dev` would put that same untrusted HTML inside the
+zone, which is the hole telecraft ADR-0072 §2 submitted `app.telecraft.dev` to
+the Public Suffix List to close.
+
+Production is unaffected: `pages.yml` still deploys `telecraft.dev` to GitHub
+Pages, and Cloudflare Pages serves previews and nothing else.
+
+### Setting it up
+
+Once, by hand, against the Cloudflare account that already holds the zone:
+
+```sh
+npx wrangler@4.127.0 pages project create telecraft-dev --production-branch main
+```
+
+Then two repository secrets:
+
+| Secret | What |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | An API token with the **Cloudflare Pages: Edit** permission on that account, and nothing else |
+| `CLOUDFLARE_ACCOUNT_ID` | The account id, from the Cloudflare dashboard sidebar |
+
+The project name is `PAGES_PROJECT` in `preview-deploy.yml` and it decides the
+hostname, so changing one means changing the other. Old previews are left
+alone; `wrangler pages deployment delete` removes one if it ever matters.
+
+**A `workflow_run` workflow only fires from the default branch.** The pull
+request that adds `preview-deploy.yml` therefore does not get a preview of
+itself, and neither does any pull request opened before it merges. The first
+one to get a URL is the first one opened after it lands on `main` with both
+secrets set. That is the same property that makes the split safe, seen from
+the other side.
 
 ## Licence
 
