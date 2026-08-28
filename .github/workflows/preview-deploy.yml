@@ -37,7 +37,7 @@ env:
   # Created once, by hand, with `wrangler pages project create`; the README
   # records the command. A workflow that created it on demand would be a
   # workflow that can create Pages projects.
-  PAGES_PROJECT: telecraft-dev
+  PAGES_PROJECT: telecraft
 
 jobs:
   deploy:

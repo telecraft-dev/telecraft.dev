@@ -224,7 +224,7 @@ and weekly, and deploys nothing.
 
 Reading a diff of `index.html` is not reading the page, so every pull request
 gets the whole site at a URL, on Cloudflare Pages, at
-`https://pr-<number>.telecraft-dev.pages.dev`. The link points at that pull
+`https://pr-<number>.telecraft.pages.dev`. The link points at that pull
 request's latest build and stays right as you push. It is posted as one
 comment, edited in place, and set as the `preview` commit status beside the
 checks.
@@ -287,7 +287,7 @@ Pages, and Cloudflare Pages serves previews and nothing else.
 Once, by hand, against the Cloudflare account that already holds the zone:
 
 ```sh
-npx wrangler@4.127.0 pages project create telecraft-dev --production-branch main
+npx wrangler@4.127.0 pages project create telecraft --production-branch main
 ```
 
 Then two repository secrets:
