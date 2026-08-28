@@ -33,8 +33,6 @@ here: change `nav.yaml` and the site changes.
 | `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
 | `assets/tabs.js` | The landing page's deployment tabs, which are two stacked sections without it |
-| `preview/worker.js` | Maps a preview hostname to that pull request's Pages deployment |
-| `preview/wrangler.toml` | The Worker's route and the one command that deploys it |
 | `assets/tokens.css` | Vendored. Values only, no selectors |
 | `assets/base.css` | Vendored. The element layer: typography, links, code, tables, controls, focus rings |
 | `assets/fonts/` | Vendored. Two families, three faces, subset and self-hosted, with their licences |
@@ -225,28 +223,14 @@ and weekly, and deploys nothing.
 ## How a pull request is previewed
 
 Reading a diff of `index.html` is not reading the page, so every pull request
-gets the whole site at a URL on the project's own domain:
+gets the whole site at a URL, on Cloudflare Pages, at
+`https://pr-<number>.telecraft-dev.pages.dev`. The link points at that pull
+request's latest build and stays right as you push. It is posted as one
+comment, edited in place, and set as the `preview` commit status beside the
+checks.
 
-```
-https://site-<number>.ci.telecraft.dev
-```
-
-The link points at that pull request's latest build and stays right as you
-push. It is posted as one comment, edited in place, and set as the `preview`
-commit status beside the checks.
-
-The files are on Cloudflare Pages; the hostname is `preview/worker.js`, a
-Worker that maps `site-<number>.ci` to that pull request's deployment and
-passes the response through. The Worker derives the mapping from the hostname,
-so a new pull request needs nothing deploying to it, and it sets two headers on
-every preview: `X-Robots-Tag: noindex`, because a preview on this domain
-carrying an unreviewed front door would otherwise compete with the real one in
-a search result, and `frame-ancestors 'none'`.
-
-### The build holds no credential, and the deploy never runs branch code
-
-Two workflows, and the split is the security design rather than an accident of
-structure.
+It is two workflows, and the split is the security design rather than an
+accident of structure.
 
 | Workflow | Trigger | Holds a credential |
 |---|---|---|
@@ -259,105 +243,70 @@ fork. So it runs with a read-only token, holds no secret, and only uploads
 `_site/` and the pull request number as artifacts. The deploy stage is a
 `workflow_run` workflow, which always runs the copy on the default branch
 whatever the branch under review says, and it never checks that branch out:
-the artifact crosses as data and is never executed, and the number is read as
-digits before it reaches a shell or an API call. A pull request cannot reach
-the Cloudflare token by editing a workflow, by adding a dependency with an
-install script, or by any other route that needs its own code to run.
+the artifact crosses as data and is never executed. A pull request cannot
+reach the Cloudflare token by editing a workflow, by adding a dependency with
+an install script, or by any other route that needs its own code to run.
+
+**Previews are on `pages.dev` and never under `telecraft.dev`.** A preview of a
+fork's pull request is untrusted HTML. `pages.dev` is on the Public Suffix
+List, so one preview is a separate site from every other preview and from
+anything of ours: it cannot carry a `SameSite` cookie to them, and it cannot
+shadow one they set.
+
+A hostname on the zone, `site-<number>.ci.telecraft.dev`, was built and taken
+out again, and it is written down here so the next person does not have to
+rediscover why. It works, and a Worker mapping the hostname to the deployment
+is about forty lines. What it costs is three things that have to be true
+before it is safe, and one of them is not ours to schedule.
+
+- **A certificate.** Universal SSL covers `*.telecraft.dev`, a wildcard matches
+  one label, and `site-8.ci.telecraft.dev` is two. Advanced Certificate
+  Manager, or a flat hostname.
+- **Every session cookie the project sets is `__Host-` prefixed**, so that
+  nothing set elsewhere in the zone can shadow it. Cheap today, because neither
+  the front door's cookie nor the Instance's is written; a forced sign-out if
+  it is retrofitted.
+- **`ci.telecraft.dev` on the Public Suffix List**, so a preview is cross-site
+  from the rest of the zone. This is the one that is not ours to schedule: the
+  list's guidelines say there is no way to expedite a submission and no reach
+  into any browser's roadmap, and that an entry may take months or years to
+  reach clients. A preview hostname on the zone would be running without that
+  protection for an unknown length of time, next to a hosted service that is
+  about to hold sessions.
+
+So the previews stay on the vendor's domain, where the same protection is
+already in force, and the zone keeps only what it needs to. The two cookie and
+suffix items are still worth doing for `app.telecraft.dev`, which is telecraft
+ADR-0072 §2's own commitment and unrelated to previews.
 
 Production is unaffected: `pages.yml` still deploys `telecraft.dev` to GitHub
-Pages, and Cloudflare serves previews and nothing else.
-
-### Three preconditions, because the previews are on our own zone
-
-A preview runs a fork's script on a hostname inside `telecraft.dev`. No header
-stops that script calling `document.cookie`, so what keeps it away from the
-rest of the zone is not in this repository. All three of these are cheap now
-and expensive later.
-
-**Every session cookie the project sets is `__Host-` prefixed.** This is the
-one that works on our own schedule, so it is first. The prefix forbids a
-`Domain` attribute and requires `Secure` and `Path=/`, which means no cookie
-set anywhere else in the zone can shadow it: a preview may still be able to
-set a `Domain=telecraft.dev` cookie, and a `__Host-` cookie is immune to it.
-ADR-0072 §2 already makes the front door's cookie host-only, which is the same
-intent; the prefix is what makes a browser enforce it. Neither the front door
-nor the Instance's cookie is written yet, so adopting it now costs nothing and
-retrofitting it later costs a forced sign-out.
-
-**`ci.telecraft.dev` goes on the Public Suffix List.** With that entry a
-browser treats every preview as its own site: cross-site from `telecraft.dev`,
-from `app.telecraft.dev`, and from every other preview, so a preview cannot
-carry a `SameSite` cookie to any of them. ADR-0072 §2 already commits to
-submitting `app.telecraft.dev`, and this is one more label on the same
-submission, so submit both together.
-
-**Do not plan around it arriving.** The list's own guidelines say there is no
-way to expedite a submission and no reach into any browser's roadmap, and that
-an entry may take months or years to reach clients depending on their update
-cycles. It is worth having and it is not a date. That is why it is second here:
-the cookie prefix is the defence that is actually in our hands, and this is the
-one that hardens `SameSite` whenever it lands.
-
-**Nothing that holds a session shares an origin with a preview.** Previews are
-`site-<number>.ci`, the hosted service is `<organisation>.app`, and neither is
-ever the apex. That is already true and is worth keeping true.
-
-The risk is entirely theoretical today, which is the reason to do this now:
-`app.telecraft.dev` does not resolve, `demo.telecraft.dev` has no sign-in, and
-there is no session anywhere in the zone to attack. The Public Suffix List
-entry therefore has the months it needs before there is anything for it to
-protect. **If the hosted service is about to launch and the entry has not
-landed, move previews back to `pages.dev`**, which is one line in
-`preview-deploy.yml`.
+Pages, and Cloudflare Pages serves previews and nothing else.
 
 ### Setting it up
 
-Once, by hand, against the Cloudflare account that already holds the zone.
+Once, by hand, against the Cloudflare account that already holds the zone:
 
-1. The Pages project, which is where the files go.
+```sh
+npx wrangler@4.127.0 pages project create telecraft-dev --production-branch main
+```
 
-   ```sh
-   npx wrangler@4.127.0 pages project create telecraft-dev --production-branch main
-   ```
+Then two repository secrets:
 
-2. A proxied wildcard DNS record, `*.ci` on `telecraft.dev`. The value does not
-   matter, because the Worker route answers before it is reached; `192.0.2.1`
-   is the conventional choice.
+| Secret | What |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | An API token with the **Cloudflare Pages: Edit** permission on that account, and nothing else |
+| `CLOUDFLARE_ACCOUNT_ID` | The account id, from the Cloudflare dashboard sidebar |
 
-3. The Worker, which is the hostname.
-
-   ```sh
-   npx wrangler@4.127.0 deploy --config preview/wrangler.toml
-   ```
-
-4. Two repository secrets.
-
-   | Secret | What |
-   |---|---|
-   | `CLOUDFLARE_API_TOKEN` | An API token with **Cloudflare Pages: Edit** on that account, and nothing else. The Worker is deployed by hand, so this token never needs to touch it |
-   | `CLOUDFLARE_ACCOUNT_ID` | The account id, from the dashboard sidebar |
-
-**The certificate is the one thing here that costs money.** Universal SSL
-covers `telecraft.dev` and `*.telecraft.dev`, and a wildcard matches one label,
-so `site-8.ci.telecraft.dev` is not covered. Serving it needs Advanced
-Certificate Manager, which is a paid add-on on the zone, for a wildcard on
-`*.ci.telecraft.dev`.
-
-If that is not worth it, one label is free and the change is small: set
-`PREVIEW_ZONE` to `telecraft.dev` in `preview-deploy.yml` and have it emit
-`site-8-ci.telecraft.dev`, change the Worker's pattern to
-`site-*-ci.telecraft.dev/*` and its hostname match to suit, and the DNS record
-to `site-*-ci`. Everything else is unchanged, and Universal SSL covers it.
-
-Old previews are left alone; `wrangler pages deployment delete` removes one if
-it ever matters.
+The project name is `PAGES_PROJECT` in `preview-deploy.yml` and it decides the
+hostname, so changing one means changing the other. Old previews are left
+alone; `wrangler pages deployment delete` removes one if it ever matters.
 
 **A `workflow_run` workflow only fires from the default branch.** The pull
 request that adds `preview-deploy.yml` therefore does not get a preview of
 itself, and neither does any pull request opened before it merges. The first
-one to get a URL is the first one opened after it lands on `main` with all four
-steps above done. That is the same property that makes the split safe, seen
-from the other side.
+one to get a URL is the first one opened after it lands on `main` with both
+secrets set. That is the same property that makes the split safe, seen from
+the other side.
 
 ## Licence
 
