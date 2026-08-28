@@ -32,6 +32,7 @@ here: change `nav.yaml` and the site changes.
 | `assets/site.css` | The landing page's structure |
 | `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
+| `assets/tabs.js` | The landing page's deployment tabs, which are two stacked sections without it |
 | `assets/tokens.css` | Vendored. Values only, no selectors |
 | `assets/base.css` | Vendored. The element layer: typography, links, code, tables, controls, focus rings |
 | `assets/fonts/` | Vendored. Two families, three faces, subset and self-hosted, with their licences |
@@ -46,6 +47,16 @@ here: change `nav.yaml` and the site changes.
 `assets/site.css` and `assets/docs.css` are the two stylesheets here that
 are ours to edit. Both are structure over the vendored element layer, and
 neither invents a colour.
+
+The landing page shows the product rather than describing it: the verdict
+panel, the console strip, the outcome cross and the two deployment diagrams
+are built from the vendored tokens and element sheet, so they cannot disagree
+with the console about a colour or a face, and they stay right in both themes
+at every width. No screenshot is used, and none should be: a screenshot is
+correct in one theme, at one width, on one release. Every outcome on the page
+is drawn as one of the state marks with its word beside it, and no severity or
+signal colour appears anywhere, which is what keeps the page inside ADR-0047
+§5 while carrying product surfaces.
 
 ## How the build works
 
@@ -208,6 +219,94 @@ which commit asked for the build.
 
 `.github/workflows/checks.yml` runs the same rules on every pull request
 and weekly, and deploys nothing.
+
+## How a pull request is previewed
+
+Reading a diff of `index.html` is not reading the page, so every pull request
+gets the whole site at a URL, on Cloudflare Pages, at
+`https://pr-<number>.telecraft.pages.dev`. The link points at that pull
+request's latest build and stays right as you push. It is posted as one
+comment, edited in place, and set as the `preview` commit status beside the
+checks.
+
+It is two workflows, and the split is the security design rather than an
+accident of structure.
+
+| Workflow | Trigger | Holds a credential |
+|---|---|---|
+| `.github/workflows/preview.yml` | `pull_request` | No |
+| `.github/workflows/preview-deploy.yml` | `workflow_run` on the above | Yes |
+
+The build stage runs code from the branch under review: `npm ci` executes
+whatever that branch's lockfile resolves to, and the branch may come from a
+fork. So it runs with a read-only token, holds no secret, and only uploads
+`_site/` and the pull request number as artifacts. The deploy stage is a
+`workflow_run` workflow, which always runs the copy on the default branch
+whatever the branch under review says, and it never checks that branch out:
+the artifact crosses as data and is never executed. A pull request cannot
+reach the Cloudflare token by editing a workflow, by adding a dependency with
+an install script, or by any other route that needs its own code to run.
+
+**Previews are on `pages.dev` and never under `telecraft.dev`.** A preview of a
+fork's pull request is untrusted HTML. `pages.dev` is on the Public Suffix
+List, so one preview is a separate site from every other preview and from
+anything of ours: it cannot carry a `SameSite` cookie to them, and it cannot
+shadow one they set.
+
+A hostname on the zone, `site-<number>.ci.telecraft.dev`, was built and taken
+out again, and it is written down here so the next person does not have to
+rediscover why. It works, and a Worker mapping the hostname to the deployment
+is about forty lines. What it costs is three things that have to be true
+before it is safe, and one of them is not ours to schedule.
+
+- **A certificate.** Universal SSL covers `*.telecraft.dev`, a wildcard matches
+  one label, and `site-8.ci.telecraft.dev` is two. Advanced Certificate
+  Manager, or a flat hostname.
+- **Every session cookie the project sets is `__Host-` prefixed**, so that
+  nothing set elsewhere in the zone can shadow it. Cheap today, because neither
+  the front door's cookie nor the Instance's is written; a forced sign-out if
+  it is retrofitted.
+- **`ci.telecraft.dev` on the Public Suffix List**, so a preview is cross-site
+  from the rest of the zone. This is the one that is not ours to schedule: the
+  list's guidelines say there is no way to expedite a submission and no reach
+  into any browser's roadmap, and that an entry may take months or years to
+  reach clients. A preview hostname on the zone would be running without that
+  protection for an unknown length of time, next to a hosted service that is
+  about to hold sessions.
+
+So the previews stay on the vendor's domain, where the same protection is
+already in force, and the zone keeps only what it needs to. The two cookie and
+suffix items are still worth doing for `app.telecraft.dev`, which is telecraft
+ADR-0072 §2's own commitment and unrelated to previews.
+
+Production is unaffected: `pages.yml` still deploys `telecraft.dev` to GitHub
+Pages, and Cloudflare Pages serves previews and nothing else.
+
+### Setting it up
+
+Once, by hand, against the Cloudflare account that already holds the zone:
+
+```sh
+npx wrangler@4.127.0 pages project create telecraft --production-branch main
+```
+
+Then two repository secrets:
+
+| Secret | What |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | An API token with the **Cloudflare Pages: Edit** permission on that account, and nothing else |
+| `CLOUDFLARE_ACCOUNT_ID` | The account id, from the Cloudflare dashboard sidebar |
+
+The project name is `PAGES_PROJECT` in `preview-deploy.yml` and it decides the
+hostname, so changing one means changing the other. Old previews are left
+alone; `wrangler pages deployment delete` removes one if it ever matters.
+
+**A `workflow_run` workflow only fires from the default branch.** The pull
+request that adds `preview-deploy.yml` therefore does not get a preview of
+itself, and neither does any pull request opened before it merges. The first
+one to get a URL is the first one opened after it lands on `main` with both
+secrets set. That is the same property that makes the split safe, seen from
+the other side.
 
 ## Licence
 

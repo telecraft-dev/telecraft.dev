@@ -4,14 +4,23 @@
  * copies of the console's (see `tools/vendored.json`). This is the only
  * stylesheet in this repository that is ours to edit.
  *
- * Two rules bind it. Nothing is fetched from another origin, ever
+ * Three rules bind it. Nothing is fetched from another origin, ever
  * (ADR-0019, ADR-0045 §5). `tools/check-external-assets.mjs` fails the
- * build if it is. And hue is never load-bearing (ADR-0047 §5): no signal
+ * build if it is. Hue is never load-bearing (ADR-0047 §5): no signal
  * colour and no severity colour appears here at all, which is the simplest
  * way to keep the rule on a page with no data on it. The only colour with a
  * job is the brand amber, which ADR-0047 §4 confines to exactly this
  * surface, and it is only ever set on --colour-bg, the one ground the
  * palette check measures it against (design-system.md, "Brand").
+ *
+ * The third rule is what the panels on this page are for. The page shows
+ * the product rather than describing it, and every panel is built from the
+ * console's own tokens and element sheet, so a reader meets the same
+ * surface here that they meet in the demo. It follows that an outcome is
+ * read off a drawn mark and its word, never off a colour: the marks below
+ * are the seven state marks of design-system.md on the same 16-unit grid at
+ * the same 1.75 stroke, drawn in ink, and each one keeps its label. Read
+ * any of them in greyscale and it still says what it says.
  *
  * `base.css` deliberately carries no block rhythm and no heading sizes,
  * because a console panel and a marketing column want neither the same
@@ -31,11 +40,14 @@
   /* One measure for every prose column on the page, so the left datum is
      the same distance from the right ragged edge in every band. */
   --measure: 34rem;
-  /* The band is the measure plus the drafting margin, and not a pixel more:
-     a wider band leaves the prose pinned to a datum on the left with a
-     ragged emptiness on the right, which reads as a layout that ran out
-     rather than a margin that was left. */
-  --band-width: 50rem;
+  /* The band holds the measure plus the drafting margin, and the panels,
+     tables and diagrams that carry the same argument in a picture. Prose is
+     still capped at --measure inside it, so widening the band widens the
+     drawings and never the line length. */
+  --band-width: 56rem;
+  /* The hero runs wider than a band because it is two columns: the words at
+     the measure, and the panel beside them. */
+  --hero-width: 72rem;
   /* The drafting margin the section numbers hang in, left of the datum. */
   --rail: 4.5rem;
 }
@@ -130,10 +142,11 @@ body {
    (identity.md). `.wordmark` rather than `.mark`, which in this design
    system means a drawn state mark and nothing else.
 
-   One class, two sizes. The chrome's is an anchor at interface size and the
-   hero's is the same anchor's markup at display size, so the documentation
-   site can emit `a.wordmark` into its own topbar and get this without
-   knowing about `.wordmark-display`. */
+   One class, three sizes. The chrome's is an anchor at interface size, the
+   hero's is a nameplate above the headline, and the console mockup's is the
+   same word at the size the real chrome sets it. The documentation site can
+   emit `a.wordmark` into its own topbar and get the first of those without
+   knowing about the other two. */
 
 .wordmark {
   margin: 0;
@@ -148,8 +161,11 @@ a.wordmark:hover {
   text-underline-offset: 0.3em;
 }
 
-.wordmark-display {
-  font-size: clamp(2.4rem, 9vw, 4.4rem);
+/* A nameplate, not a headline. The headline is the headline: the wordmark
+   set at four rem was the largest thing on the page and the first sentence a
+   reader had to get past to find out what the product does. */
+.wordmark-plate {
+  font-size: var(--text-l);
 }
 
 .wordmark-lead {
@@ -161,12 +177,16 @@ a.wordmark:hover {
    drawing surface, not wallpaper: tiled behind a page of prose it stops
    being measurement and becomes decoration, which identity.md rules out.
    It is drawn on a pseudo-element rather than the section so the mask that
-   dissolves it into the page cannot reach the text. */
+   dissolves it into the page cannot reach the text.
+
+   The hero is set to the left datum rather than centred, like every band
+   below it. A centred column has no datum to hang from, and the datum is
+   the identity. */
 
 .hero {
   position: relative;
   overflow: hidden;
-  padding: var(--space-6) var(--space-5) calc(var(--space-6) * 2);
+  padding: calc(var(--space-6) * 1.5) var(--space-5) calc(var(--space-6) * 2);
   border-bottom: 1px solid var(--colour-rule);
 }
 
@@ -195,16 +215,52 @@ a.wordmark:hover {
 
 .hero-inner {
   position: relative;
-  max-width: var(--band-width);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: center;
+  max-width: var(--hero-width);
   margin: 0 auto;
-  text-align: center;
+}
+
+.hero-words > * {
+  margin: 0;
+}
+
+.hero-words > * + * {
+  margin-top: var(--space-4);
+}
+
+/* The nameplate: the word and the pulse on one baseline, which is where a
+   maker's mark sits on an instrument. */
+.hero-plate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hero h1 {
+  max-width: 22ch;
+  font-size: clamp(1.9rem, 5.6vw, 3rem);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.015em;
+  /* The problem is stated in muted ink and the answer in full ink, so the
+     two halves of the sentence are told apart by weight of tone rather than
+     by a second size or a second colour. */
+  color: var(--colour-text-muted);
+}
+
+.h1-lead {
+  color: var(--colour-text);
 }
 
 /* ---- The pulse ----
    A telemetry-signal motif, which identity.md holds from the naming
    decision. It carries no state and no reading, so it is safe ground for
    the brand amber: there is nothing here for a hue to be load-bearing
-   about.
+   about. It sits beside the wordmark now rather than under it, at the size
+   a nameplate wants.
 
    The draw is left at the duration it was authored with. `--motion-fast`
    and `--motion-base` are transition durations (90ms and 160ms) and a
@@ -212,21 +268,21 @@ a.wordmark:hover {
 
 .pulse {
   display: block;
-  width: min(28rem, 80vw);
-  margin: var(--space-3) auto var(--space-5);
+  width: min(15rem, 45vw);
+  height: auto;
 }
 
 .pulse polyline {
   fill: none;
   stroke: var(--brand);
-  stroke-width: 2.5;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 640;
-  stroke-dashoffset: 640;
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
   animation:
-    draw 3.2s ease-out forwards,
-    hum 6s 3.2s ease-in-out infinite alternate;
+    draw 2.4s ease-out forwards,
+    hum 6s 2.4s ease-in-out infinite alternate;
 }
 
 @keyframes draw {
@@ -257,16 +313,9 @@ a.wordmark:hover {
 /* ---- The words in the hero ---- */
 
 .lede {
-  margin: 0 auto var(--space-4);
-  max-width: 30rem;
-  font-size: clamp(var(--text-l), 3vw, 1.5rem);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
-}
-
-.hero-note {
-  margin: 0 auto var(--space-5);
   max-width: var(--measure);
+  font-size: var(--text-l);
+  line-height: var(--leading-normal);
   color: var(--colour-text-muted);
 }
 
@@ -281,9 +330,7 @@ a.wordmark:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
   gap: var(--space-3) var(--space-5);
-  margin: 0 0 var(--space-5);
 }
 
 .action {
@@ -319,13 +366,10 @@ a.wordmark:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: center;
   gap: var(--space-2) var(--space-3);
-  margin: 0 auto;
   max-width: var(--measure);
   font-size: var(--text-s);
   color: var(--colour-text-muted);
-  text-align: left;
 }
 
 /* A stamp, not a pill: the largest radius in the system is 8px because the
@@ -344,6 +388,800 @@ a.wordmark:hover {
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--colour-text-muted);
+}
+
+/* Two columns once there is room for the measure and a panel beside it. The
+   panel leads on a narrow screen only in the source order sense: it comes
+   after the words either way, so a reader on a phone meets the claim before
+   the evidence. */
+@media (min-width: 62rem) {
+  .hero-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+    gap: var(--space-6);
+  }
+}
+
+/* ---- Panels ----
+   The product's own surface, built from the product's own tokens: a plate,
+   a head that names what is in it, a body, and where there is one, a foot
+   carrying the cost or the verdict. Nothing here is a screenshot. A
+   screenshot is right in one theme, at one width, on one release, and this
+   is right in every combination of the three because it is the same
+   stylesheet the console is dressed by. */
+
+.panel {
+  margin: 0;
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-2);
+  box-shadow: var(--elevation-1);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--colour-chrome);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  font-weight: var(--weight-medium);
+  color: var(--colour-text);
+}
+
+.panel-body {
+  padding: var(--space-4);
+}
+
+.panel-body > * {
+  margin: 0;
+}
+
+.panel-body > * + * {
+  margin-top: var(--space-4);
+}
+
+.panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--colour-rule);
+  background: var(--colour-surface-raised);
+}
+
+/* A note under a drawing is the drawing's caption, so it takes the muted
+   ink every caption on this page takes, and it keeps the panel's measure
+   rather than the page's. */
+.panel-note,
+.panel-cost {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-s);
+  line-height: var(--leading-snug);
+  color: var(--colour-text-muted);
+}
+
+.band-body .panel-note,
+.band-body .panel-cost {
+  max-width: none;
+}
+
+.panel-hero {
+  /* The hero panel is the only one that may outgrow its column, because on
+     a narrow screen it is the whole width there is. */
+  max-width: 100%;
+}
+
+/* ---- Chips ----
+   The console's chip, in the one variant this page needs: muted ink, one or
+   two words, set never to wrap. Tone reinforces the words inside it and
+   never replaces them, which on a surface with no severity colour at all
+   means there is exactly one tone. */
+
+.chip {
+  flex: none;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--colour-text-muted);
+}
+
+.chip-mono {
+  font-family: var(--font-mono);
+}
+
+/* ---- Marks ----
+   The seven state marks and the five domain marks share one 16-unit grid at
+   1.75 stroke with round caps and joins, and inherit `currentColor`
+   (design-system.md, "Marks and icons"). Unicode is not used for any of
+   them: Atkinson carries a tick and a solid triangle but no cross, so a
+   verdict drawn from the typeface would render its two halves from two
+   different faces at two different weights.
+
+   Solid where the outline would close up at 16px, which is why the advisory
+   triangle and the Service dot are filled and the rest are not. */
+
+.mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Aligned to the text it sits beside rather than to the line box, so a
+     mark in a sentence sits on the same optical line as the words. */
+  vertical-align: -0.18em;
+}
+
+.mark-solid path {
+  fill: currentColor;
+}
+
+/* ---- The three readings ----
+   One geometry, three strokes. The difference is dash pattern, never
+   colour: these are three readings of one estate, and every row states its
+   own name next to its line, so nothing is read off a hue (ADR-0047 §5).
+   The same list appears twice on the page, once inside the hero panel as
+   the thing being read and once in band 02 with each source explained. */
+
+.readings {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.band-body > .readings-explained {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--colour-rule);
+}
+
+.reading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--colour-rule-soft);
+}
+
+.readings-explained .reading {
+  padding: var(--space-4) 0;
+  border-bottom-color: var(--colour-rule);
+}
+
+.reading:last-child {
+  border-bottom: 0;
+}
+
+.readings-explained .reading:last-child {
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.reading-name {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.reading-source {
+  margin: 0;
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
+/* Inside the hero panel the third column is the reading itself, which is
+   data, so it is set in the mono face and lines up. */
+.reading-value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+}
+
+.trace {
+  display: block;
+  width: 100%;
+  max-width: 15rem;
+  /* Height from the viewBox, so a narrower column draws a smaller trace
+     rather than letterboxing one inside a fixed band. */
+  height: auto;
+}
+
+/* The datum the reading deviates from. It shows through the gaps in the
+   dashed and dotted strokes, which is what makes a trace read as an
+   instrument's rather than as a squiggle (identity.md: datum lines and
+   hairlines). */
+.trace-datum {
+  stroke: var(--colour-rule);
+  stroke-width: 1;
+}
+
+.trace polyline {
+  fill: none;
+  stroke: var(--colour-text-muted);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  /* The same trace is drawn at 240 user units into anything from a 90px
+     column inside a panel to a 240px one in a band. A stroke that scales
+     with it thins to under a pixel in the narrow case and the reading stops
+     being legible, so the stroke is held at its authored width and only the
+     geometry scales. */
+  vector-effect: non-scaling-stroke;
+}
+
+/* Intended is drawn: a continuous line, because it is one authored
+   document at one commit. */
+.trace-intended polyline {
+  stroke-linecap: round;
+}
+
+/* Effective is reported: the collector answers when asked, in segments. */
+.trace-effective polyline {
+  stroke-dasharray: 11 5;
+}
+
+/* Observed is sampled: discrete arrivals over a window, which is what the
+   reading actually is. */
+.trace-observed polyline {
+  stroke-dasharray: 0.5 5;
+  stroke-linecap: round;
+}
+
+/* ---- The verdict ----
+   A mark, its word, and the sentence it stands for, in that order and never
+   without all three. The word is the identifier the API and the CLI print,
+   so it is set in the mono face and spelled exactly as they spell it. */
+
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+}
+
+.verdict .mark {
+  align-self: center;
+}
+
+.verdict-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  font-weight: var(--weight-medium);
+}
+
+.verdict-said {
+  font-size: var(--text-s);
+  color: var(--colour-text-muted);
+}
+
+.verdict-owner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+}
+
+/* ---- Two panels side by side ----
+   Used where the argument is a comparison, and only there. Two panels that
+   are not being compared are a card grid, which this page does not have. */
+
+.band-body > .two-up {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.band-body > .two-up-note {
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 48rem) {
+  .band-body > .two-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Where the two panels carry different amounts of content, the shorter
+     one still reaches the same foot, so the pair reads as a comparison
+     rather than as two things that happen to be adjacent. */
+  .two-up-tall .panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .two-up-tall .panel-body {
+    flex: 1;
+  }
+}
+
+/* ---- Code inside a panel ----
+   An excerpt is quoted material, so it sits on the page's ground rather
+   than the panel's, the way a quotation sits inside a plate. */
+
+.excerpt,
+.terminal,
+.commands {
+  margin: 0;
+  overflow-x: auto;
+  padding: var(--space-3);
+  background: var(--colour-bg);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+
+/* The commands in a plate are meant to be typed, so they keep the larger of
+   the two sizes. */
+.commands {
+  font-size: var(--text-s);
+}
+
+/* A terminal tells two things apart: what you type and what comes back. The
+   difference is ink, not colour, and the prompt character is part of the
+   line rather than a decoration in front of it. */
+.term-cmd {
+  color: var(--colour-text);
+}
+
+.term-out {
+  color: var(--colour-text-muted);
+}
+
+.band-body .terminal {
+  margin-top: var(--space-4);
+}
+
+/* ---- The outcome cross ----
+   A table, because it is one: two readings in, one outcome out. The reader
+   can hold a row of it against a row of the console. `base.css` dresses the
+   element; this sets the density and the two column tones. */
+
+.band-body > .cross-scroll {
+  margin-top: var(--space-4);
+  overflow-x: auto;
+}
+
+.cross {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: var(--text-s);
+}
+
+.cross-caption {
+  padding-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--colour-text-faint);
+}
+
+.cross th,
+.cross td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  text-align: left;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--colour-rule-soft);
+}
+
+.cross thead th {
+  border-bottom: 1px solid var(--colour-rule);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+/* The two readings that go in are set in the mono face and in muted ink,
+   and the outcome that comes out is set in full ink, so an eye running down
+   the table lands on the column that is the answer. */
+.cross-in {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+  white-space: nowrap;
+}
+
+.cross-out .mono {
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.cross tbody td:last-child {
+  color: var(--colour-text-muted);
+}
+
+/* ---- The console mockup ----
+   The chrome, the environment lens and one row of the shelf, at the size a
+   column allows. It is the shape a reader will recognise when they open the
+   demo, and it is drawn from the same tokens, so it cannot disagree with the
+   real one about a colour or a face. It is deliberately not interactive: a
+   mockup that responds to a click is a promise it cannot keep. */
+
+.console {
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  overflow: hidden;
+  background: var(--colour-bg);
+}
+
+.console-chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  background: var(--colour-chrome);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.console-mark {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.console-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.console-tab {
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+/* The active Workspace is a solid fill of the ink, which is what the accent
+   is in this system: contrast, not hue. */
+.console-tab-on {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-1);
+  background: var(--colour-fill);
+  color: var(--colour-on-fill);
+}
+
+.console-lens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--colour-rule-soft);
+}
+
+.console-meta {
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+.console-shelf {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  list-style: none;
+}
+
+.console-card {
+  padding: var(--space-3);
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+.console-card > * {
+  margin: 0;
+}
+
+.console-card-name {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+/* Every band row carries its mark and its lane name, and neither ever
+   appears without the other (ADR-0047 §5). */
+.console-card-band {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+}
+
+/* ---- The deployment tabs ----
+   Two shapes of the same release, so they are two views of one section
+   rather than two sections. Both panels are in the document and both are
+   readable with no script at all: `assets/tabs.js` unhides the tab list and
+   takes over the choice, and until it runs the reader has both, each under
+   its own heading. */
+
+.band-body > .tabs {
+  margin-top: var(--space-5);
+}
+
+.tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--colour-rule);
+}
+
+.tab {
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: -1px;
+  background: none;
+  border: 1px solid transparent;
+  border-bottom-color: var(--colour-rule);
+  border-radius: var(--radius-1) var(--radius-1) 0 0;
+  font: inherit;
+  font-size: var(--text-m);
+  font-weight: var(--weight-medium);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--colour-text);
+}
+
+/* The selected tab is the plate the panel below it hangs from, which is why
+   its bottom edge is missing: the tab and its panel are one surface. */
+.tab[aria-selected='true'] {
+  background: var(--colour-surface);
+  border-color: var(--colour-rule);
+  border-bottom-color: var(--colour-surface);
+  color: var(--colour-text);
+}
+
+.tabpanel {
+  padding-top: var(--space-5);
+}
+
+.tabpanel > * {
+  margin: 0;
+}
+
+.tabpanel > * + * {
+  margin-top: var(--space-4);
+}
+
+.tabpanel p {
+  max-width: var(--measure);
+}
+
+/* Each panel carries its own heading for the reader who has no script. Once
+   the tab list is showing, the tab is the heading, and two of them would be
+   the same word twice. */
+[data-tabs-ready] .tabpanel-title {
+  display: none;
+}
+
+.tabpanel-more {
+  font-size: var(--text-m);
+}
+
+/* ---- The topology diagram ----
+   The same drawing twice with one boundary moved, because that is the only
+   difference between the two shapes. Drawn in HTML rather than as an SVG so
+   every label stays real text at a real size: a 640-unit viewBox scaled into
+   a 360px viewport renders a 12px label at under 7px, and the labels are the
+   content.
+
+   The telemetry path is a strip of its own with its own rule around it,
+   because the first principle is that Telecraft is not on it, and a diagram
+   that draws the platform next to the path has already lost the argument. */
+
+.topology {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.topo-zone {
+  padding: var(--space-4);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-2);
+}
+
+.topo-zone > * + * {
+  margin-top: var(--space-3);
+}
+
+/* The customer's boundary is drawn solid and the project's is drawn dashed,
+   so which side of the line a box is on is read off the line and not off a
+   colour. */
+.topo-zone-ours {
+  border-style: dashed;
+  background: var(--colour-surface);
+}
+
+.topo-zone-name {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+.topo-path {
+  padding: var(--space-3);
+  background: var(--colour-bg);
+  border: 1px solid var(--colour-rule-soft);
+  border-radius: var(--radius-1);
+}
+
+.topo-path > * + * {
+  margin-top: var(--space-2);
+}
+
+.topo-path-name,
+.topo-path-note,
+.topo-reads,
+.topo-store-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--colour-text-muted);
+}
+
+.topo-path-name {
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+/* The flow is a row of plates joined by hairlines. The join is a border on
+   the gap rather than a glyph, because Atkinson carries no arrow and a
+   fallback face drawing one would be the only character on the page set in
+   a typeface nobody chose. */
+.topo-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.topo-node {
+  flex: none;
+  padding: var(--space-2) var(--space-3);
+  background: var(--colour-surface);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  font-size: var(--text-xs);
+  color: var(--colour-text);
+}
+
+.topo-node + .topo-node {
+  position: relative;
+  margin-left: var(--space-4);
+}
+
+.topo-node + .topo-node::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: var(--space-4);
+  border-top: 1px solid var(--colour-rule);
+}
+
+/* The Instance is the subject of the drawing, so it takes the fill the
+   system uses for the one thing on a surface that is selected. */
+.topo-node-lead {
+  background: var(--colour-fill);
+  border-color: var(--colour-fill);
+  color: var(--colour-on-fill);
+  font-weight: var(--weight-medium);
+}
+
+/* Below the width where two plates and the hairline between them fit, the
+   flow stacks. Wrapped, the hairline that joins two nodes ends up hanging
+   off the left of the row below, which reads as a stray rule rather than as
+   a join. */
+@media (max-width: 30rem) {
+  .topo-flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topo-node + .topo-node {
+    margin-left: 0;
+    margin-top: var(--space-4);
+  }
+
+  .topo-node + .topo-node::before {
+    top: auto;
+    right: auto;
+    bottom: 100%;
+    left: var(--space-4);
+    width: 0;
+    height: var(--space-4);
+    border-top: 0;
+    border-left: 1px solid var(--colour-rule);
+  }
+}
+
+.topo-node-store {
+  font-family: var(--font-mono);
+}
+
+.topo-store {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+/* ---- Facts ----
+   A row per question a reader has about a deployment shape, with the
+   question in the mono face on the left. Rows on hairlines rather than
+   cards: the two lists are meant to be read against each other, and a card
+   grid puts them in parallel instead of in register. */
+
+.facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--colour-rule);
+}
+
+.facts li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--colour-rule-soft);
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
+.facts-value {
+  color: var(--colour-text-muted);
+}
+
+.facts-key {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+@media (min-width: 40rem) {
+  .facts li {
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+  }
 }
 
 /* ---- The bands ----
@@ -404,83 +1242,7 @@ a.wordmark:hover {
     border-left: 1px solid var(--colour-rule);
     padding-left: var(--space-5);
   }
-}
 
-/* ---- The three readings ----
-   One geometry, three strokes. The difference is dash pattern, never
-   colour: these are three readings of one estate, and every row states its
-   own name next to its line, so nothing is read off a hue (ADR-0047 §5). */
-
-.band-body > .readings {
-  margin: var(--space-5) 0 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--colour-rule);
-}
-
-.reading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--colour-rule);
-}
-
-.reading-name {
-  margin: 0;
-  font-weight: var(--weight-semibold);
-}
-
-.reading-source {
-  margin: 0;
-  font-size: var(--text-m);
-  color: var(--colour-text-muted);
-}
-
-.trace {
-  display: block;
-  width: 100%;
-  max-width: 15rem;
-  /* Height from the viewBox, so a narrower column draws a smaller trace
-     rather than letterboxing one inside a fixed band. */
-  height: auto;
-}
-
-/* The datum the reading deviates from. It shows through the gaps in the
-   dashed and dotted strokes, which is what makes a trace read as an
-   instrument's rather than as a squiggle (identity.md: datum lines and
-   hairlines). */
-.trace-datum {
-  stroke: var(--colour-rule);
-  stroke-width: 1;
-}
-
-.trace polyline {
-  fill: none;
-  stroke: var(--colour-text-muted);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-/* Intended is drawn: a continuous line, because it is one authored
-   document at one commit. */
-.trace-intended polyline {
-  stroke-linecap: round;
-}
-
-/* Effective is reported: the collector answers when asked, in segments. */
-.trace-effective polyline {
-  stroke-dasharray: 11 5;
-}
-
-/* Observed is sampled: discrete arrivals over a window, which is what the
-   reading actually is. */
-.trace-observed polyline {
-  stroke-dasharray: 0.5 5;
-  stroke-linecap: round;
-}
-
-@media (min-width: 48rem) {
   .reading {
     grid-template-columns: 7rem 15rem minmax(0, 1fr);
     align-items: center;
@@ -488,7 +1250,21 @@ a.wordmark:hover {
   }
 }
 
-/* ---- The three rungs ----
+/* Inside a panel the three columns arrive earlier, because the panel is
+   narrower than a band and the rows are shorter. */
+@media (min-width: 30rem) {
+  .panel .reading {
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .panel .trace {
+    max-width: 100%;
+  }
+}
+
+/* ---- The three parts ----
    Rows on hairlines, not a shelf of cards. Each row states its cost, which
    is the register the whole product is written in (identity.md, "State the
    cost"). */
@@ -543,12 +1319,13 @@ a.wordmark:hover {
 /* ---- The principles ----
    Short declaratives on hairlines. No icons: a glyph beside each of these
    would be decoration, and every mark in this system is a mapping from a
-   state (design-system.md, "Marks and icons"). */
+   state (design-system.md, "Marks and icons").
 
-/* One column, like the readings and the rungs above it. Two columns fitted,
+   One column, like the readings and the parts above it. Two columns fitted,
    and read as a different page: five items in two columns also leaves the
    fifth alone on a row, which makes a deliberate list look like one that ran
    out. */
+
 .principles {
   margin: var(--space-5) 0 0;
   padding: 0;
@@ -571,9 +1348,9 @@ a.wordmark:hover {
 }
 
 /* ---- The two plates ----
-   The only plates on the page besides the chrome. A plate here frames
-   something the reader can act on (a console to open, a command to run)
-   which is what keeps two of them from reading as a card grid.
+   A plate here frames something the reader can act on (a console to open, a
+   command to run) which is what keeps two of them from reading as a card
+   grid.
 
    Stacked at every width, and never side by side. Two columns would put
    them in parallel when they are in sequence: the heading says see it, then
@@ -620,19 +1397,6 @@ a.wordmark:hover {
   font-size: var(--text-l);
   font-weight: var(--weight-medium);
   color: var(--colour-text);
-}
-
-/* The commands scroll inside their own bounds rather than widening the
-   page, which is the only way a flag list survives 360px intact. */
-.commands {
-  margin: 0;
-  overflow-x: auto;
-  padding: var(--space-3);
-  background: var(--colour-bg);
-  border: 1px solid var(--colour-rule-soft);
-  border-radius: var(--radius-1);
-  font-size: var(--text-s);
-  line-height: var(--leading-snug);
 }
 
 /* ---- The foot ---- */

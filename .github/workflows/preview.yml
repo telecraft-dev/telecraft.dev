@@ -1,0 +1,91 @@
+name: Preview
+
+# Stage one of two: build a pull request's site, and hold no credential while
+# doing it.
+#
+# A pull request here changes a page somebody reads, and reading a diff of
+# `index.html` is not reading the page. This builds the whole site from the
+# pull request's tree and the documentation on telecraft's `main` and uploads
+# it. `preview-deploy.yml` is what publishes it and says where it went.
+#
+# The split is the security design, not an accident of structure. This
+# workflow runs code from the branch: `npm ci` executes whatever that branch's
+# lockfile resolves to, and the branch may come from a fork. So it runs with a
+# read-only token, holds no secret, and can reach nothing. Everything that
+# needs a credential happens in the other workflow, which never checks this
+# branch out.
+#
+# `checks.yml` is what says the tree is correct. This says nothing about
+# correctness; it exists so a reviewer can look.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    name: Build a preview of the site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # The documentation source, exactly as a deploy takes it: telecraft's
+      # `main`, and never a ref from anywhere else. A preview built from a
+      # different documentation tree than the one production builds from is a
+      # preview of a site nobody is going to get.
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@v4
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - run: npm ci
+
+      - name: Build the site
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Nothing the built site fetches comes from another origin
+        run: npm run check:external
+
+      # `_site/` holds the landing page, the documentation and every asset,
+      # and it is what `pages.yml` deploys.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: _site
+          retention-days: 14
+          if-no-files-found: error
+
+      # The deploy stage runs on `workflow_run`, whose payload does not
+      # reliably carry the pull request number for a fork. Writing it into an
+      # artifact is the standard way to hand it across, and it is safe to
+      # trust: this file is the only thing that writes it, and the deploy
+      # stage reads it as a number and nothing else.
+      - name: Record which pull request this was
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          mkdir -p meta
+          printf '%s\n' "$PR_NUMBER" > meta/pr-number
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: preview-meta
+          path: meta
+          retention-days: 14
+          if-no-files-found: error
