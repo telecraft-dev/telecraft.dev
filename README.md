@@ -274,24 +274,29 @@ stops that script calling `document.cookie`, so what keeps it away from the
 rest of the zone is not in this repository. All three of these are cheap now
 and expensive later.
 
+**Every session cookie the project sets is `__Host-` prefixed.** This is the
+one that works on our own schedule, so it is first. The prefix forbids a
+`Domain` attribute and requires `Secure` and `Path=/`, which means no cookie
+set anywhere else in the zone can shadow it: a preview may still be able to
+set a `Domain=telecraft.dev` cookie, and a `__Host-` cookie is immune to it.
+ADR-0072 §2 already makes the front door's cookie host-only, which is the same
+intent; the prefix is what makes a browser enforce it. Neither the front door
+nor the Instance's cookie is written yet, so adopting it now costs nothing and
+retrofitting it later costs a forced sign-out.
+
 **`ci.telecraft.dev` goes on the Public Suffix List.** With that entry a
 browser treats every preview as its own site: cross-site from `telecraft.dev`,
 from `app.telecraft.dev`, and from every other preview, so a preview cannot
 carry a `SameSite` cookie to any of them. ADR-0072 §2 already commits to
 submitting `app.telecraft.dev`, and this is one more label on the same
-submission. **Submit both together.** It is the longest lead time of anything
-here, months rather than days, because it ships in browser releases rather than
-in a deploy.
+submission, so submit both together.
 
-**Every session cookie the project sets is `__Host-` prefixed.** The prefix
-forbids a `Domain` attribute and requires `Secure` and `Path=/`, which means
-no cookie set anywhere else in the zone can shadow it. That closes the one
-thing the Public Suffix List entry does not: a preview may still be able to set
-a `Domain=telecraft.dev` cookie, and a `__Host-` cookie cannot be shadowed by
-one. ADR-0072 §2 already makes the front door's cookie host-only, which is the
-same intent; the prefix is what makes a browser enforce it. Neither the front
-door nor the Instance's cookie is written yet, so adopting it now costs
-nothing.
+**Do not plan around it arriving.** The list's own guidelines say there is no
+way to expedite a submission and no reach into any browser's roadmap, and that
+an entry may take months or years to reach clients depending on their update
+cycles. It is worth having and it is not a date. That is why it is second here:
+the cookie prefix is the defence that is actually in our hands, and this is the
+one that hardens `SameSite` whenever it lands.
 
 **Nothing that holds a session shares an origin with a preview.** Previews are
 `site-<number>.ci`, the hosted service is `<organisation>.app`, and neither is
