@@ -245,6 +245,12 @@ a.wordmark:hover {
   font-size: clamp(1.9rem, 5.6vw, 3rem);
   line-height: var(--leading-tight);
   letter-spacing: -0.015em;
+  /* The headline is two sentences with a break between them, and the first
+     one is long enough to wrap. Left to itself it wrapped one word on to the
+     second line, which reads as a line that ran out rather than one that was
+     set. Balancing distributes the wrap instead, and the browsers that do not
+     support it get exactly what they got before. */
+  text-wrap: balance;
   /* The problem is stated in muted ink and the answer in full ink, so the
      two halves of the sentence are told apart by weight of tone rather than
      by a second size or a second colour. */
