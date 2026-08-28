@@ -43,6 +43,7 @@ here: change `nav.yaml` and the site changes.
 | `tools/vendored.json` | Where every vendored file came from |
 | `tools/vendor.mjs` | Fetch the vendored files, and prove they have not drifted |
 | `tools/check-external-assets.mjs` | Nothing the browser fetches comes from another origin |
+| `tools/check-dashes.mjs` | No dash is used as punctuation, anywhere in the repository |
 
 `assets/site.css` and `assets/docs.css` are the two stylesheets here that
 are ours to edit. Both are structure over the vendored element layer, and
