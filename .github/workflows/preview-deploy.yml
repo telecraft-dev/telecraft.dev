@@ -32,6 +32,14 @@ on:
 permissions:
   contents: read
 
+# One deploy per branch at a time, newest wins. Stage one can finish out of
+# order when a pull request is pushed to twice in quick succession, and the
+# alias URL must never end up holding the older build.
+concurrency:
+  group: >-
+    preview-deploy-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
 env:
   # The Pages project, which decides the hostname: `<project>.pages.dev`.
   # Created once, by hand, with `wrangler pages project create`; the README
@@ -49,6 +57,7 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       # Read the artifacts of the run that triggered this one.
       actions: read
@@ -62,7 +71,7 @@ jobs:
       deployments: write
     steps:
       - name: Take the built site from the build run
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: site-preview
           path: _site
@@ -70,7 +79,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Take the pull request number from the build run
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: preview-meta
           path: meta
@@ -91,6 +100,36 @@ jobs:
           fi
           echo "number=$number" >> "$GITHUB_OUTPUT"
           echo "alias=pr-$number" >> "$GITHUB_OUTPUT"
+
+      # Digits alone are not enough. The number names a pull request, and the
+      # branch that wrote it could name somebody else's: its build would then
+      # be published at that request's alias and reported in that request's
+      # comment, in front of that request's reviewers. The named pull
+      # request's head has to be the very commit this run was triggered for,
+      # or the number is not this build's.
+      - name: The number names the pull request this run built
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        with:
+          script: |
+            const number = Number(process.env.PR_NUMBER)
+            const expected = process.env.HEAD_SHA
+            let pull
+            try {
+              ({ data: pull } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: number,
+              }))
+            } catch (error) {
+              core.setFailed(`pull request #${number} could not be read: ${error.message}`)
+              return
+            }
+            if (pull.head.sha !== expected) {
+              core.setFailed(`pull request #${number} is at ${pull.head.sha}, and this run built ${expected}`)
+            }
 
       # Pinned exactly, like every dependency in `package.json`. Wrangler is
       # fetched rather than added to the project because nothing in this
@@ -114,7 +153,7 @@ jobs:
       # any of them is still running, and this workflow runs while they are.
       - name: Open a deployment for this preview
         id: deployment
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
@@ -163,7 +202,7 @@ jobs:
       # who bookmarked it is never reading a stale build.
       - name: Say where the preview is
         if: always() && steps.deployment.outputs.id
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           PREVIEW_URL: https://${{ steps.pr.outputs.alias }}.${{ env.PAGES_PROJECT }}.pages.dev
