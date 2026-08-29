@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telecraft: know the telemetry you configured actually arrived</title>
-<meta name="description" content="Telecraft is source-available fleet and policy management for OpenTelemetry. It reads what your collectors were told, what they report they are running, and what arrived in your backend, then says which of the three is wrong and who fixes it.">
+<title>Telecraft: compose, apply and validate OpenTelemetry configuration</title>
+<meta name="description" content="Telecraft is how a platform team runs OpenTelemetry for everyone else. Teams build their own collector configuration from a library of parts you have already approved, Telecraft applies it to their collectors, and then checks what actually arrived in your backend.">
 <!-- The theme, resolved before the first paint. `tokens.css` carries dark on
      the bare :root so an unstamped document is still complete, which means a
      reader who chose light would otherwise see one dark frame. This is the
@@ -81,17 +81,19 @@
             <polyline points="0,12 52,12 66,12 74,4 82,21 90,7 98,17 106,12 160,12 172,12 180,5 188,20 196,12 240,12"/>
           </svg>
         </p>
-        <h1>An OpenTelemetry estate fails quietly.<br><span class="h1-lead">Telecraft is what notices.</span></h1>
-        <p class="lede">Source-available fleet and policy management for OpenTelemetry. Telecraft
-        reads what your collectors were told, what they report they are running, and what
-        arrived in your backend, then says which of the three is wrong and who fixes it.</p>
+        <h1><span class="h1-beat">Compose it.</span> <span class="h1-beat">Apply it.</span>
+        <span class="h1-beat">Validate it.</span></h1>
+        <p class="lede">Telecraft is how a platform team runs OpenTelemetry for everyone
+        else. Teams build their own collector configuration from a library of parts you have
+        already approved, Telecraft applies it to their collectors, and then checks what
+        actually arrived in your backend.</p>
         <p class="actions">
           <a class="action action-lead" href="https://demo.telecraft.dev">See it running</a>
           <a class="action" href="/docs/guides/quickstart.html">Get a verdict in five minutes</a>
         </p>
         <p class="status">
           <span class="stamp">Early software</span>
-          Conformance, authoring and serving all work end to end, with a console over all four
+          Composing, applying and validating all work end to end, with a console over all four
           workspaces. Interfaces are still free to change.
         </p>
       </div>
@@ -153,66 +155,158 @@
     </div>
   </section>
 
-  <section class="band" aria-labelledby="gap">
+  <section class="band" aria-labelledby="compose">
     <div class="band-inner">
       <p class="band-index" aria-hidden="true">01</p>
       <div class="band-body">
-        <h2 id="gap">The gap nobody owns</h2>
-        <p>A receiver gets wired into the wrong pipeline, a gateway drops an attribute, a team
-        ships a service with no instrumentation, and nothing announces any of it. The dashboard
-        that should have shown the gap is the dashboard nobody built, because nobody knew the
-        gap existed.</p>
+        <h2 id="compose">Compose it</h2>
+        <p>Parts are approved once, centrally. After that a team composes what it needs
+        without asking anybody, because everything it can reach has already been approved.</p>
 
-        <!-- Two panels, one question. The question sits between them rather
-             than under them, because the point is that it belongs to neither
-             tool: each panel is telling the truth and the answer is not in
-             either one. -->
-        <div class="two-up">
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">Your configuration tools say</span>
-            </figcaption>
-            <div class="panel-body">
-              <pre class="excerpt"><code>service:
-  pipelines:
-    metrics:
-      receivers:  [otlp]
-      processors: [batch]
-      exporters:  [otlphttp]</code></pre>
-              <p class="panel-note">
-                <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
-                Applied, on every collector.
-              </p>
-            </div>
-          </figure>
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">Your backend says</span>
-            </figcaption>
-            <div class="panel-body">
-              <pre class="excerpt"><code>service.name: checkout-api
-traces   1.2M spans / 15m
-logs     840k records / 15m
-metrics  0</code></pre>
-              <p class="panel-note">
-                <svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg>
-                A gap, and no cause.
-              </p>
-            </div>
-          </figure>
-        </div>
-        <p class="two-up-note">Tools that read collector configuration tell you what was asked
-        for. Tools that read a telemetry backend tell you what turned up. Neither tells you
-        which of those two facts is the problem, so neither tells you whose problem it is.</p>
+        <!-- A Blueprint as the composer renders it: one ordered lane per signal,
+             and the Requirements the composition claims to meet. Built from the
+             same tokens and the same element sheet as the console, so the shape
+             a reader learns here is the shape they meet in the demo. -->
+        <figure class="panel">
+          <figcaption class="panel-head">
+            <span class="panel-title">platform/edge-standard</span>
+            <span class="chip">Blueprint</span>
+            <span class="chip chip-mono">v4</span>
+          </figcaption>
+          <div class="panel-body">
+            <pre class="excerpt"><code>traces    otlp · k8sattributes · batch · otlphttp
+logs      otlp · k8sattributes · batch · otlphttp
+metrics   otlp · k8sattributes · batch · otlphttp
+
+satisfies:
+  traces-to-primary
+  resource-attributes-present
+  no-unbatched-export</code></pre>
+            <p class="panel-note">
+              <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
+              Endorsed by platform, and bound to Tier C1.
+            </p>
+          </div>
+        </figure>
+
+        <h3>A library teams can help themselves to</h3>
+        <ul class="lexicon">
+          <li class="entry">
+            <h4 class="entry-name">Catalogue</h4>
+            <p class="entry-what">Every collector component that exists in the release you
+            run, with its stability for each signal. Telecraft generates it from upstream and
+            keeps one per release.</p>
+          </li>
+          <li class="entry">
+            <h4 class="entry-name">Allow-list</h4>
+            <p class="entry-what">The part of the Catalogue a Team may use. A child Team can
+            narrow the list it inherits, and never widen it.</p>
+          </li>
+          <li class="entry">
+            <h4 class="entry-name">Component</h4>
+            <p class="entry-what">A configured, named, versioned part with an Owner: a
+            receiver, processor, exporter, connector or extension. Shared across Teams, or
+            local to one Blueprint.</p>
+          </li>
+          <li class="entry">
+            <h4 class="entry-name">Blueprint</h4>
+            <p class="entry-what">A composition of Components, one ordered lane per signal. A
+            Tier binds exactly one Blueprint version, so what a collector runs is always a
+            version somebody chose.</p>
+          </li>
+          <li class="entry">
+            <h4 class="entry-name">Endorsement</h4>
+            <p class="entry-what">The organisation standing behind a Blueprint at a named
+            version, across the whole Estate. Moving it to a newer version is a fresh change
+            proposal.</p>
+          </li>
+        </ul>
+
+        <p>A Blueprint names the Requirements it means to satisfy, and Telecraft checks that
+        claim rather than trusting it. A team that composed from the library is compliant
+        because of what it built, not because somebody reviewed it afterwards.</p>
       </div>
     </div>
   </section>
 
-  <section class="band" aria-labelledby="crossed">
+  <section class="band" aria-labelledby="apply">
     <div class="band-inner">
       <p class="band-index" aria-hidden="true">02</p>
       <div class="band-body">
-        <h2 id="crossed">Three readings, crossed</h2>
+        <h2 id="apply">Apply it</h2>
+        <p>The renderer compiles a Blueprint to plain OpenTelemetry Collector YAML and opens
+        it in git as a change proposal. Review it, approve it and merge it with the rules your
+        repository already has: history, rollback, approval and audit are git’s job, and
+        Telecraft does not replace any of them.</p>
+
+        <!-- The change proposal, because this is the point at which a
+             composition stops being one team's draft and becomes something
+             the organisation agreed to. Plain collector YAML, so it can be
+             read by somebody who has never opened the console. -->
+        <figure class="panel">
+          <figcaption class="panel-head">
+            <span class="panel-title">Render platform/edge-standard v4 for Tier C1</span>
+            <span class="chip">Change proposal</span>
+          </figcaption>
+          <div class="panel-body">
+            <pre class="excerpt"><code>rendered/production/c1/collector.yaml
+
+  processors:
+    batch:
+      timeout: 5s
++   k8sattributes:
++     passthrough: false
+
+  service:
+    pipelines:
+      metrics:
+-       processors: [batch]
++       processors: [k8sattributes, batch]</code></pre>
+            <p class="panel-note">
+              <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
+              Reviewed by the Owners the estate names, and merged by them.
+            </p>
+          </div>
+        </figure>
+
+        <h3>Two ways to reach a collector, chosen one collector at a time</h3>
+        <div class="two-up">
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">Telecraft serves it</span>
+            </figcaption>
+            <div class="panel-body">
+              <p class="panel-note">A stateless OpAMP server hands the merged configuration to
+              an OpAMP Supervisor beside each collector. A Rollout moves a Cohort at a time,
+              and the collector reports back what it is actually running.</p>
+              <p class="panel-cost"><span class="stamp">Costs you</span> a Supervisor beside
+              each served collector</p>
+            </div>
+          </figure>
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">Your GitOps serves it</span>
+            </figcaption>
+            <div class="panel-body">
+              <p class="panel-note">The rendered YAML sits in git and your existing delivery
+              pipeline applies it, exactly as it applies everything else. Telecraft is not in
+              the loop at all.</p>
+              <p class="panel-cost"><span class="stamp">Costs you</span> nothing you are not
+              already running</p>
+            </div>
+          </figure>
+        </div>
+        <p class="two-up-note">Neither route puts Telecraft in the telemetry path. It is never
+        a collector, a gateway or a hop, so if it stops, nothing stops flowing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="validate">
+    <div class="band-inner">
+      <p class="band-index" aria-hidden="true">03</p>
+      <div class="band-body">
+        <h2 id="validate">Validate it</h2>
         <p>Telecraft reads the estate three ways. Each reading has one definition and one
         source; they compose, and they are never blended.</p>
 
@@ -229,8 +323,8 @@ metrics  0</code></pre>
               <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
               <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
             </svg>
-            <p class="reading-source">The configuration in git, pinned to a commit SHA rather
-            than a branch tip. A configuration a human committed by hand is Intended too.</p>
+            <p class="reading-source">The configuration in git, pinned to a commit rather than
+            a branch tip.</p>
           </li>
           <li class="reading">
             <p class="reading-name">Effective</p>
@@ -238,9 +332,8 @@ metrics  0</code></pre>
               <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
               <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
             </svg>
-            <p class="reading-source">The collector’s own report of the configuration it is
-            running. Never what an applier holds, and never what the platform believes it
-            sent.</p>
+            <p class="reading-source">The collector’s own report of what it is running. Never
+            what an applier holds, and never what the platform believes it sent.</p>
           </li>
           <li class="reading">
             <p class="reading-name">Observed</p>
@@ -248,92 +341,69 @@ metrics  0</code></pre>
               <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
               <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
             </svg>
-            <p class="reading-source">Telemetry that landed in a backend over a window, read
-            through a seam. Each requirement is judged against the window it asked for.</p>
+            <p class="reading-source">The telemetry that landed in your backend over a window,
+            judged against the window each Requirement asked for.</p>
           </li>
         </ul>
 
-        <h3>Seven outcomes, because “no logs arrived” is not one situation</h3>
-        <p>Crossing Effective with Observed, per requirement, is what turns “this is broken”
-        into “this is broken, and here is who can fix it”.</p>
+        <h3>Both of these Services report zero metrics</h3>
+        <p>They are not the same problem, and they do not go to the same team. Crossing what a
+        collector reports with what arrived is what tells them apart.</p>
 
-        <!-- The cross, as the product computes it. A table, because it is one:
-             two readings in, one outcome out, and the reader can check the
-             row against the console. The outcome names are the identifiers
-             the API and the CLI print, so they are set in the mono face and
-             spelled exactly as they are spelled everywhere else. -->
-        <div class="cross-scroll">
-          <table class="cross">
-            <caption class="cross-caption">The outcome cross</caption>
-            <thead>
-              <tr>
-                <th scope="col">Effective</th>
-                <th scope="col">Observed</th>
-                <th scope="col">Outcome</th>
-                <th scope="col">What it diagnoses</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="cross-in">yes</td>
-                <td class="cross-in">yes</td>
-                <td class="cross-out"><span class="mono">compliant</span></td>
-                <td>The requirement is met.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">yes</td>
-                <td class="cross-in">no</td>
-                <td class="cross-out"><span class="mono">broken_pipeline</span></td>
-                <td>Somebody configured this and it is not working.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">no</td>
-                <td class="cross-in">no</td>
-                <td class="cross-out"><span class="mono">not_configured</span></td>
-                <td>An unmet requirement. The owner needs to instrument.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">no</td>
-                <td class="cross-in">yes</td>
-                <td class="cross-out"><span class="mono">ungoverned</span></td>
-                <td>Telemetry is arriving from something nobody configured.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">unknown</td>
-                <td class="cross-in">no</td>
-                <td class="cross-out"><span class="mono">not_delivered</span></td>
-                <td>Nothing arrived, and no Effective reading explains why.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">no</td>
-                <td class="cross-in">unknown</td>
-                <td class="cross-out"><span class="mono">misconfigured</span></td>
-                <td>A configuration assertion failed, with no signal reading to cross it
-                against.</td>
-              </tr>
-              <tr>
-                <td class="cross-in">unknown</td>
-                <td class="cross-in">unknown</td>
-                <td class="cross-out"><span class="mono">unknown</span></td>
-                <td>No evidence from any reading. Never treated as a pass.</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- The distinction the product exists to make, shown as two cards
+             rather than as the outcome table. The table is the model; this is
+             the reading. Severity colour is deliberately absent here as
+             everywhere (ADR-0047 §5): the outcome is read off a drawn mark
+             and its word, which is why a card survives greyscale. -->
+        <div class="two-up">
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">checkout-api</span>
+              <span class="chip">production</span>
+            </figcaption>
+            <div class="panel-body">
+              <pre class="excerpt"><code>configured   yes
+arriving     no</code></pre>
+              <p class="panel-note">
+                <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5 12.5 12.5"/><path d="M12.5 3.5 3.5 12.5"/></svg>
+                Somebody configured this and it is not working.
+              </p>
+              <p class="panel-cost"><span class="stamp">Owner</span> platform/ingest</p>
+            </div>
+          </figure>
+          <figure class="panel">
+            <figcaption class="panel-head">
+              <span class="panel-title">basket-svc</span>
+              <span class="chip">production</span>
+            </figcaption>
+            <div class="panel-body">
+              <pre class="excerpt"><code>configured   no
+arriving     no</code></pre>
+              <p class="panel-note">
+                <svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg>
+                Nobody configured it at all.
+              </p>
+              <p class="panel-cost"><span class="stamp">Owner</span> team/basket</p>
+            </div>
+          </figure>
         </div>
+        <p class="two-up-note">A dashboard scores both of these as zero. Telling them apart is
+        what sends the first to the platform team as a defect and the second to the team that
+        owns the Service as work they have not done yet. Every reading also carries a Known
+        flag, so a provider that cannot answer says so, with a cause, and no evidence is never
+        quietly treated as a pass. The <a href="/docs/concepts/">full set of outcomes</a> is in
+        the documentation.</p>
 
-        <p>A configured pipeline delivering nothing is a defect for the platform team. An
-        unconfigured service delivering nothing is a governance gap for the workload owner.
-        Both score zero; they need different people and different fixes.</p>
-        <p>Every reading carries a <span class="mono">Known</span> flag, and not knowing is a
-        normal state. A provider that cannot answer says so, with a cause. No evidence is never
-        quietly treated as a pass.</p>
+        <p>Composing, applying and validating are three capabilities over one model. Adopt any
+        one of them without the others, in any order; using one is never a condition of using
+        another.</p>
       </div>
     </div>
   </section>
 
   <section class="band" aria-labelledby="shape">
     <div class="band-inner">
-      <p class="band-index" aria-hidden="true">03</p>
+      <p class="band-index" aria-hidden="true">04</p>
       <div class="band-body">
         <h2 id="shape">One binary. A command, or a platform.</h2>
         <p>There is nothing else to install. The same artefact answers a question in your
@@ -421,7 +491,7 @@ library_drift       0</span>
 
   <section class="band" aria-labelledby="run">
     <div class="band-inner">
-      <p class="band-index" aria-hidden="true">04</p>
+      <p class="band-index" aria-hidden="true">05</p>
       <div class="band-body">
         <h2 id="run">Run it yourself, or let us run it</h2>
         <p>The same release either way. Nothing sits in the telemetry path in either shape, and
@@ -562,42 +632,6 @@ library_drift       0</span>
             Instance</a></p>
           </section>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" aria-labelledby="parts">
-    <div class="band-inner">
-      <p class="band-index" aria-hidden="true">05</p>
-      <div class="band-body">
-        <h2 id="parts">Three parts, adopted separately</h2>
-        <p>Telecraft is three capabilities that share one model. Adopt any one of them without
-        the others, in any order; using one is never a condition of using another. Each one
-        states what it costs you.</p>
-        <ul class="rungs">
-          <li class="rung">
-            <h3 class="rung-name">Conformance</h3>
-            <p class="rung-what">Reads your telemetry backend and your collectors’ reported
-            configuration, judges every Service against the Requirements that apply to it, and
-            routes each finding to an owner.</p>
-            <p class="rung-cost"><span class="stamp">Costs you</span> a connection string</p>
-          </li>
-          <li class="rung">
-            <h3 class="rung-name">Authoring</h3>
-            <p class="rung-what">Teams compose Blueprints from governed Components, and the
-            renderer compiles the result to plain OpenTelemetry Collector YAML in git as change
-            proposals.</p>
-            <p class="rung-cost"><span class="stamp">Costs you</span> nothing in your delivery
-            path</p>
-          </li>
-          <li class="rung">
-            <h3 class="rung-name">Serving</h3>
-            <p class="rung-what">A stateless OpAMP server delivers rendered configuration from
-            git to collectors, with GitOps as a co-equal alternative, chosen per collector.</p>
-            <p class="rung-cost"><span class="stamp">Costs you</span> an OpAMP Supervisor
-            beside each served collector</p>
-          </li>
-        </ul>
       </div>
     </div>
   </section>
