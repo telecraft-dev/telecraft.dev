@@ -1310,6 +1310,13 @@ a.wordmark:hover {
     grid-template-columns: 10rem minmax(0, 1fr);
     column-gap: var(--space-4);
   }
+
+  /* Under the description it belongs to, not under the term. Auto placement
+     put it in the term's column, where it wrapped at ten rem and read as a
+     second definition of the word above it. */
+  .entry-cost {
+    grid-column: 2;
+  }
 }
 
 /* ---- Wide bands, split in two ----
