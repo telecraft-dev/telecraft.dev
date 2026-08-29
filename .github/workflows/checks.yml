@@ -1,6 +1,7 @@
 name: Checks
 
-# Four rules this site cannot break quietly. Nothing here deploys.
+# Four rules this site cannot break quietly, and a weekly look at the links
+# that leave it. Nothing here deploys.
 #
 # The air gap (ADR-0019, ADR-0045 §5): nothing the browser fetches comes from
 # another origin. It is checked twice, over two different trees. The source
@@ -45,10 +46,11 @@ jobs:
   checks:
     name: Air gap, vendored design system, and the build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: npm
@@ -68,7 +70,7 @@ jobs:
         run: node tools/vendor.mjs check
 
       - name: Check out the documentation from telecraft-dev/telecraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: telecraft-dev/telecraft
           ref: main
@@ -86,3 +88,42 @@ jobs:
 
       - name: Nothing the built site fetches comes from another origin
         run: npm run check:external
+
+  # A fifth rule, on the schedule only: the links that leave the site still
+  # answer. It never runs on a pull request, because a third party's outage
+  # is not a fact about the change under review, and links rot on days when
+  # nothing changed here. Only external URLs are checked; whether internal
+  # links resolve is the generator's own test suite's job.
+  links:
+    name: External links still answer
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Check out the documentation from telecraft-dev/telecraft
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: telecraft-dev/telecraft
+          ref: main
+          path: telecraft
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - run: npm ci
+
+      - name: Build the site
+        run: npm run build -- --docs telecraft/docs
+
+      - name: Every external link answers
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --scheme https --scheme http '_site/**/*.html'
+          fail: true
