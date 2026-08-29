@@ -50,6 +50,16 @@
   --hero-width: 72rem;
   /* The drafting margin the section numbers hang in, left of the datum. */
   --rail: 4.5rem;
+
+  /* What sits on a brand fill. `tokens.css` carries `--brand` for both
+     themes and is vendored from the console, so its twin lives here rather
+     than as a fork of a file `tools/vendor.mjs check` holds byte for byte. */
+  --brand-ink: var(--colour-bg);
+}
+
+:root[data-theme='light'] {
+  /* The light brand is a dark bronze, so the ink on it goes the other way. */
+  --brand-ink: #ffffff;
 }
 
 body {
@@ -102,6 +112,19 @@ body {
 .band-body > h3,
 .band-words > h3 {
   margin-top: var(--space-6);
+}
+
+/* The beat is marked as well as spaced, in the one colour this page may use
+   where there is no data: a short rule in the drafting margin of the column,
+   which is the same gesture the band number makes in the margin of the page. */
+.band-body > h3::before,
+.band-words > h3::before {
+  content: '';
+  display: block;
+  width: 2rem;
+  height: 2px;
+  margin-bottom: var(--space-3);
+  background: var(--brand);
 }
 
 /* ---- The chrome ----
@@ -352,8 +375,8 @@ a.wordmark:hover {
 .action-lead {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-1);
-  background: var(--colour-fill);
-  color: var(--colour-on-fill);
+  background: var(--brand);
+  color: var(--brand-ink);
   text-decoration: none;
 }
 
@@ -857,6 +880,11 @@ a.wordmark:hover {
   color: var(--colour-text-muted);
 }
 
+.console-card-band .mark {
+  width: 12px;
+  height: 12px;
+}
+
 /* ---- The deployment tabs ----
    Two shapes of the same release, so they are two views of one section
    rather than two sections. Both panels are in the document and both are
@@ -1137,6 +1165,19 @@ a.wordmark:hover {
   border-bottom: 1px solid var(--colour-rule);
 }
 
+/* Alternating grounds, so the page has a beat a reader can feel at the
+   scroll bar rather than one flat field seven sections long. One step of
+   the surface scale, which is the same step a panel takes off the page. */
+.band:nth-of-type(even) {
+  background: var(--colour-surface);
+}
+
+/* A panel on the raised ground would disappear into it, so on those bands
+   it takes the page's own ground instead. */
+.band:nth-of-type(even) .panel {
+  background: var(--colour-bg);
+}
+
 .band-last {
   border-bottom: 0;
 }
@@ -1165,7 +1206,7 @@ a.wordmark:hover {
   font-family: var(--font-mono);
   font-size: var(--text-s);
   letter-spacing: 0.12em;
-  color: var(--colour-text-faint);
+  color: var(--brand);
 }
 
 /* One breakpoint for the whole page, and 48rem is where the drafting margin
@@ -1300,12 +1341,10 @@ a.wordmark:hover {
     gap: calc(var(--space-6) * 1.5);
   }
 
-  /* The panel holds while the prose beside it scrolls, because the prose is
-     describing the panel and a reader who has scrolled past it is reading a
-     description of something they can no longer see. */
+  /* The panel sits at the head of its column and travels with the words.
+     It was pinned, which held it in place for the length of the prose and
+     read as a panel that had come loose from the paragraph it belonged to. */
   .band-demo {
-    position: sticky;
-    top: var(--space-5);
     align-self: start;
   }
 }
@@ -1580,6 +1619,54 @@ a.wordmark:hover {
   overflow: hidden;
 }
 
+/* ---- Severity and signal, borrowed from the console ----
+   Two sets of colour that already exist in `tokens.css`, contrast verified
+   on both grounds and separated under simulated deuteranopia and
+   protanopia. Neither carries anything on its own: a severity tone always
+   sits on a mark whose shape says the same thing, and a lane hue never
+   appears without its lane name beside it, which is the rule ADR-0047 §5
+   extends to this site by name.
+
+   The site used to have neither, on the reasoning that a marketing page has
+   no state to report. It does: every panel on it reports one, and reporting
+   it in the ink of the product is more honest than reporting it in grey. */
+
+.mark-ok {
+  color: var(--severity-ok);
+}
+
+.mark-advisory {
+  color: var(--severity-advisory);
+}
+
+.mark-violation {
+  color: var(--severity-violation);
+}
+
+/* ---- Signal lanes ---- */
+
+[data-lane='traces'] {
+  --lane: var(--signal-traces);
+}
+
+[data-lane='logs'] {
+  --lane: var(--signal-logs);
+}
+
+[data-lane='metrics'] {
+  --lane: var(--signal-metrics);
+}
+
+.lane {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--lane);
+}
+
+.lane-name,
+.console-card-band[data-lane] {
+  color: var(--lane, var(--colour-text-faint));
+}
+
 /* ---- The principles ----
    Short declaratives on hairlines. No icons: a glyph beside each of these
    would be decoration, and every mark in this system is a mapping from a
@@ -1609,6 +1696,7 @@ a.wordmark:hover {
   display: block;
   font-weight: var(--weight-semibold);
   color: var(--colour-text);
+  color: var(--colour-text);
 }
 
 /* ---- The two plates ----
@@ -1632,6 +1720,7 @@ a.wordmark:hover {
   padding: var(--space-5);
   background: var(--colour-surface);
   border: 1px solid var(--colour-rule);
+  border-left: 2px solid var(--brand);
   border-radius: var(--radius-2);
 }
 

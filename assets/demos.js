@@ -29,9 +29,11 @@
     return node
   }
 
-  function mark(paths, solid) {
+  function mark(paths, solid, tone) {
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.setAttribute('class', solid ? 'mark mark-solid' : 'mark')
+    var cls = solid ? 'mark mark-solid' : 'mark'
+    if (tone) cls += ' mark-' + tone
+    svg.setAttribute('class', cls)
     svg.setAttribute('viewBox', '0 0 16 16')
     svg.setAttribute('aria-hidden', 'true')
     paths.forEach(function (d) {
@@ -49,8 +51,13 @@
     foreign: [['M8 2.5 13.5 8 8 13.5 2.5 8Z'], false],
   }
 
-  function markFor(name) {
-    return mark(MARKS[name][0], MARKS[name][1])
+  /* The tone is the severity the console gives this state, and it is always
+     the second thing the reader has: the mark's shape and the word beside it
+     carry the state on their own (ADR-0047 §5). A caller that passes none
+     gets an unstated mark, which is what a step part way through a sequence
+     is. */
+  function markFor(name, tone) {
+    return mark(MARKS[name][0], MARKS[name][1], tone)
   }
 
   /* Swaps the still picture for the working one. Called only once a panel has
@@ -209,6 +216,8 @@
       lanesList.textContent = ''
       SIGNALS.forEach(function (signal) {
         var row = el('li', 'lane')
+        /* The lane's own hue, and never without the name beside it. */
+        row.dataset.lane = signal
         row.appendChild(el('span', 'lane-name', signal))
 
         var parts = el('ul', 'lane-parts')
@@ -283,7 +292,7 @@
       REQUIREMENTS.forEach(function (req) {
         var met = req.test(lanes)
         var item = el('li', met ? 'claim' : 'claim claim-unmet')
-        item.appendChild(markFor(met ? 'met' : 'unmet'))
+        item.appendChild(markFor(met ? 'met' : 'unmet', met ? 'ok' : 'violation'))
         item.appendChild(el('span', 'claim-name', req.id))
         item.appendChild(el('span', 'claim-said', met ? req.says : 'Not met by this composition.'))
         claimsList.appendChild(item)
@@ -344,7 +353,7 @@
 
       note.textContent = ''
       var done = at >= COHORTS.length - 1
-      note.appendChild(markFor(done ? 'met' : 'absent'))
+      note.appendChild(done ? markFor('met', 'ok') : markFor('absent'))
       note.appendChild(
         el(
           'span',
@@ -393,24 +402,28 @@
   var OUTCOMES = {
     'yes|yes': {
       name: 'compliant',
+      tone: 'ok',
       mark: 'met',
       said: 'The requirement is met.',
       owner: null,
     },
     'yes|no': {
       name: 'broken_pipeline',
+      tone: 'violation',
       mark: 'unmet',
       said: 'Somebody configured this and it is not working.',
       owner: 'platform/ingest',
     },
     'no|no': {
       name: 'not_configured',
+      tone: 'violation',
       mark: 'absent',
       said: 'Nobody configured it at all.',
       owner: 'own',
     },
     'no|yes': {
       name: 'ungoverned',
+      tone: 'advisory',
       mark: 'foreign',
       said: 'Telemetry is arriving from something nobody configured.',
       owner: 'own',
@@ -467,7 +480,7 @@
 
         var out = OUTCOMES[state.configured + '|' + state.arriving]
         verdict.textContent = ''
-        verdict.appendChild(markFor(out.mark))
+        verdict.appendChild(markFor(out.mark, out.tone))
         var name = el('span', 'verdict-name', out.name)
         verdict.appendChild(name)
         said.textContent = out.said
