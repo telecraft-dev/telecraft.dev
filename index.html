@@ -730,16 +730,16 @@ library_drift       0</span>
           </div>
           <div class="plate">
             <h3>A first verdict</h3>
-            <p>You need Go 1.26 or later and <span class="mono">git</span>. Clone
-            <a href="https://github.com/telecraft-dev/telecraft">telecraft</a> and the public
-            <a href="https://github.com/telecraft-dev/estate-demo">demo estate</a> beside each
-            other, then:</p>
-            <pre class="commands"><code>go build -o telecraft ./cmd/telecraft
-
-./telecraft check \
-  -library ../estate-demo/requirements \
-  -estate ../estate-demo/demo/rows.yaml \
-  -exemptions ../estate-demo/exemptions</code></pre>
+            <p>One downloaded file and <span class="mono">git</span>. No toolchain, and
+            nothing to compile. Take the CLI for your machine from the
+            <a href="https://github.com/telecraft-dev/telecraft/releases/latest">latest
+            release</a>, clone the public
+            <a href="https://github.com/telecraft-dev/estate-demo">demo estate</a> beside it,
+            then:</p>
+            <pre class="commands"><code>./telecraft check \
+  -library estate-demo/requirements \
+  -estate estate-demo/demo/rows.yaml \
+  -exemptions estate-demo/exemptions</code></pre>
             <p>The <a href="/docs/guides/quickstart.html">quickstart</a> walks the rest of it,
             and the <a href="/docs/">documentation</a> covers everything else.</p>
           </div>
