@@ -69,11 +69,13 @@ body {
    children the rhythm spaces, and the two rules tie; the later one wins on
    the elements it names. */
 
-.band-body > * {
+.band-body > *,
+.band-words > * {
   margin: 0;
 }
 
-.band-body > * + * {
+.band-body > * + *,
+.band-words > * + * {
   margin-top: var(--space-4);
 }
 
@@ -97,7 +99,8 @@ body {
 
 /* A heading that opens a new beat wants more air above it than a paragraph
    does. This is the only place the rhythm varies. */
-.band-body > h3 {
+.band-body > h3,
+.band-words > h3 {
   margin-top: var(--space-6);
 }
 
@@ -546,7 +549,8 @@ a.wordmark:hover {
   list-style: none;
 }
 
-.band-body > .readings-explained {
+.band-body > .readings-explained,
+.band-words > .readings-explained {
   margin-top: var(--space-5);
   border-top: 1px solid var(--colour-rule);
 }
@@ -1152,6 +1156,10 @@ a.wordmark:hover {
   margin: 0 auto;
 }
 
+.band-split > * {
+  margin: 0;
+}
+
 .band-index {
   margin: 0;
   font-family: var(--font-mono);
@@ -1206,7 +1214,8 @@ a.wordmark:hover {
    Rows on hairlines, not a shelf of cards. A term and what it is, at the
    density of a reference rather than a feature list. */
 
-.band-body > .lexicon {
+.band-body > .lexicon,
+.band-words > .lexicon {
   margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
@@ -1237,6 +1246,338 @@ a.wordmark:hover {
     grid-template-columns: 10rem minmax(0, 1fr);
     column-gap: var(--space-4);
   }
+}
+
+/* ---- Wide bands, split in two ----
+   The hero puts the words beside the thing they describe, and a band that
+   has something to show wants the same shape. `.band-wide` takes the hero's
+   measure and `.band-split` divides it: prose on the left at the same
+   measure it always had, and the panel on the right.
+
+   Which bands get it is a rule and not a judgement: a band that shows
+   something takes the wide measure, and a band that is only words keeps the
+   reading measure it always had. So 01 to 05 are wide and 06 and 07 are
+   not.
+
+   A second breakpoint, and the only one on the page besides 48rem. The
+   split cannot open at 48rem because two columns out of 43.5rem of body
+   leave the prose at about twenty characters, which is not a measure. It
+   opens at 60rem, where the narrower half is still wider than the panel is
+   on a phone, and the columns are set in fractions from there so a laptop
+   and a wide display both divide what they have rather than one of them
+   being sized for the other. */
+
+.band-wide {
+  max-width: var(--hero-width);
+}
+
+.band-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.entry-cost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-s);
+  color: var(--colour-text-muted);
+}
+
+.verdicts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 60rem) {
+  .band-split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    /* Two steps of the scale, because the gutter between a column of prose
+       and a panel is the widest gap on the page and the scale stops at 32px. */
+    gap: calc(var(--space-6) * 1.5);
+  }
+
+  /* The panel holds while the prose beside it scrolls, because the prose is
+     describing the panel and a reader who has scrolled past it is reading a
+     description of something they can no longer see. */
+  .band-demo {
+    position: sticky;
+    top: var(--space-5);
+    align-self: start;
+  }
+}
+
+/* ---- The live panels ----
+   `assets/demos.js` builds these; the markup they replace is the same content
+   standing still. Everything here is a control or a state, so it is drawn the
+   way the console draws controls and states: a hairline, a mono label, and no
+   colour carrying a meaning a word does not also carry (ADR-0047 §5). */
+
+.demo-live {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.demo-live[hidden],
+.panel-cost[hidden] {
+  display: none;
+}
+
+.demo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.demo-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+.demo-choice {
+  display: inline-flex;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  overflow: hidden;
+}
+
+.demo-opt,
+.toggle-opt {
+  padding: 2px var(--space-2);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+}
+
+.demo-choice .demo-opt + .demo-opt,
+.toggle-opts .toggle-opt + .toggle-opt {
+  border-left: 1px solid var(--colour-rule);
+}
+
+/* The chosen one is filled rather than tinted, which is the one way this
+   page marks a control as on and the only one that survives greyscale. */
+.demo-opt[aria-pressed='true'],
+.toggle-opt[aria-pressed='true'] {
+  background: var(--colour-fill);
+  color: var(--colour-on-fill);
+}
+
+.demo-bar > .demo-opt {
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  padding: 2px var(--space-3);
+}
+
+.demo-opt[disabled] {
+  color: var(--colour-text-faint);
+  cursor: default;
+}
+
+/* ---- The lanes ---- */
+
+.lanes,
+.claims,
+.cohorts,
+.lane-parts,
+.palette-parts,
+.cohort-nodes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lanes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.lane {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.lane-name,
+.cohort-name,
+.claims-head {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+.lane-parts,
+.palette-parts,
+.cohort-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.part,
+.node {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  background: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text);
+  white-space: nowrap;
+}
+
+.part {
+  cursor: pointer;
+}
+
+/* A part in a lane can be taken out, and the glyph is what says so. The
+   `+` and a barred entry are not removable, so neither carries it. */
+.lane-parts .part:not(.part-add)::after {
+  content: '\00d7';
+  color: var(--colour-text-faint);
+}
+
+.part:hover,
+.part:focus-visible {
+  border-color: var(--colour-text-muted);
+}
+
+.part-add {
+  border-style: dashed;
+  color: var(--colour-text-muted);
+}
+
+.part-barred {
+  border-style: dotted;
+  color: var(--colour-text-faint);
+  cursor: not-allowed;
+}
+
+.palette {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+.demo-empty {
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+/* ---- The claims ---- */
+
+.claims {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--colour-rule);
+}
+
+.claim {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.claim .mark {
+  margin-top: 2px;
+}
+
+.claim-name {
+  font-family: var(--font-mono);
+  color: var(--colour-text);
+}
+
+.claim-said {
+  grid-column: 2;
+  color: var(--colour-text-muted);
+}
+
+.demo-foot {
+  margin: 0;
+}
+
+.demo-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* ---- The rollout ---- */
+
+.cohorts {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cohort {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.node {
+  color: var(--colour-text-faint);
+}
+
+.node-version {
+  color: inherit;
+}
+
+/* A collector that has reported the new version is filled, the way every
+   other settled state on this page is. */
+.node-done {
+  border-color: var(--colour-text-muted);
+  color: var(--colour-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .node {
+    transition: border-color 200ms ease, color 200ms ease;
+  }
+}
+
+/* ---- The cross ---- */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.toggle-name {
+  flex: none;
+  width: 6rem;
+  font-family: var(--font-mono);
+  color: var(--colour-text-muted);
+}
+
+.toggle-opts {
+  display: inline-flex;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  overflow: hidden;
 }
 
 /* ---- The principles ----

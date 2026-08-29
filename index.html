@@ -54,6 +54,7 @@
 <link rel="stylesheet" href="/assets/site.css">
 <script src="/assets/theme.js" defer></script>
 <script src="/assets/tabs.js" defer></script>
+<script src="/assets/demos.js" defer></script>
 </head>
 <body>
 <!-- The chrome is shared with the documentation site, which generates its
@@ -156,25 +157,70 @@
   </section>
 
   <section class="band" aria-labelledby="compose">
-    <div class="band-inner">
+    <div class="band-inner band-wide">
       <p class="band-index" aria-hidden="true">01</p>
       <div class="band-body">
-        <h2 id="compose">Compose it</h2>
-        <p>Parts are approved once, centrally. After that a team composes what it needs
-        without asking anybody, because everything it can reach has already been approved.</p>
+        <div class="band-split">
+          <div class="band-words">
+            <h2 id="compose">Compose it</h2>
+            <p>Parts are approved once, centrally. After that a team composes what it needs
+            without asking anybody, because everything it can reach has already been
+            approved.</p>
 
-        <!-- A Blueprint as the composer renders it: one ordered lane per signal,
-             and the Requirements the composition claims to meet. Built from the
-             same tokens and the same element sheet as the console, so the shape
-             a reader learns here is the shape they meet in the demo. -->
-        <figure class="panel">
-          <figcaption class="panel-head">
-            <span class="panel-title">platform/edge-standard</span>
-            <span class="chip">Blueprint</span>
-            <span class="chip chip-mono">v4</span>
-          </figcaption>
-          <div class="panel-body">
-            <pre class="excerpt"><code>traces    otlp · k8sattributes · batch · otlphttp
+            <h3>A library teams can help themselves to</h3>
+            <ul class="lexicon">
+              <li class="entry">
+                <h4 class="entry-name">Catalogue</h4>
+                <p class="entry-what">Every collector component that exists in the release you
+                run, with its stability for each signal. Telecraft generates it from upstream
+                and keeps one per release.</p>
+              </li>
+              <li class="entry">
+                <h4 class="entry-name">Allow-list</h4>
+                <p class="entry-what">The part of the Catalogue a Team may use. A child Team
+                can narrow the list it inherits, and never widen it.</p>
+              </li>
+              <li class="entry">
+                <h4 class="entry-name">Component</h4>
+                <p class="entry-what">A configured, named, versioned part with an Owner: a
+                receiver, processor, exporter, connector or extension. Shared across Teams, or
+                local to one Blueprint.</p>
+              </li>
+              <li class="entry">
+                <h4 class="entry-name">Blueprint</h4>
+                <p class="entry-what">A composition of Components, one ordered lane per
+                signal. A Tier binds exactly one Blueprint version, so what a collector runs
+                is always a version somebody chose.</p>
+              </li>
+              <li class="entry">
+                <h4 class="entry-name">Endorsement</h4>
+                <p class="entry-what">The organisation standing behind a Blueprint at a named
+                version, across the whole Estate.</p>
+              </li>
+            </ul>
+
+            <p>A Blueprint names the Requirements it means to satisfy, and Telecraft checks
+            that claim rather than trusting it. A team that composed from the library is
+            compliant because of what it built, not because somebody reviewed it
+            afterwards.</p>
+          </div>
+
+          <!-- The composer, as far as a page will take it. Without script the
+               reader gets the composition as the renderer writes it, which is
+               the whole content; `assets/demos.js` is what turns it into
+               something you can take apart. Nothing here is a mock of a
+               screen: the lanes, the Allow-list and the checked claims are
+               the model the product computes, at the size of a column. -->
+          <div class="band-demo">
+            <figure class="panel demo" data-demo="composer">
+              <figcaption class="panel-head">
+                <span class="panel-title">platform/edge-standard</span>
+                <span class="chip">Blueprint</span>
+                <span class="chip chip-mono">v4</span>
+              </figcaption>
+              <div class="panel-body">
+                <div data-demo-static>
+                  <pre class="excerpt"><code>traces    otlp · k8sattributes · batch · otlphttp
 logs      otlp · k8sattributes · batch · otlphttp
 metrics   otlp · k8sattributes · batch · otlphttp
 
@@ -182,74 +228,71 @@ satisfies:
   traces-to-primary
   resource-attributes-present
   no-unbatched-export</code></pre>
-            <p class="panel-note">
-              <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
-              Endorsed by platform, and bound to Tier C1.
-            </p>
+                </div>
+                <div class="demo-live" hidden data-demo-live></div>
+              </div>
+              <div class="panel-foot">
+                <p class="panel-note">
+                  <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
+                  Endorsed by platform, and bound to Tier C1.
+                </p>
+              </div>
+            </figure>
           </div>
-        </figure>
-
-        <h3>A library teams can help themselves to</h3>
-        <ul class="lexicon">
-          <li class="entry">
-            <h4 class="entry-name">Catalogue</h4>
-            <p class="entry-what">Every collector component that exists in the release you
-            run, with its stability for each signal. Telecraft generates it from upstream and
-            keeps one per release.</p>
-          </li>
-          <li class="entry">
-            <h4 class="entry-name">Allow-list</h4>
-            <p class="entry-what">The part of the Catalogue a Team may use. A child Team can
-            narrow the list it inherits, and never widen it.</p>
-          </li>
-          <li class="entry">
-            <h4 class="entry-name">Component</h4>
-            <p class="entry-what">A configured, named, versioned part with an Owner: a
-            receiver, processor, exporter, connector or extension. Shared across Teams, or
-            local to one Blueprint.</p>
-          </li>
-          <li class="entry">
-            <h4 class="entry-name">Blueprint</h4>
-            <p class="entry-what">A composition of Components, one ordered lane per signal. A
-            Tier binds exactly one Blueprint version, so what a collector runs is always a
-            version somebody chose.</p>
-          </li>
-          <li class="entry">
-            <h4 class="entry-name">Endorsement</h4>
-            <p class="entry-what">The organisation standing behind a Blueprint at a named
-            version, across the whole Estate. Moving it to a newer version is a fresh change
-            proposal.</p>
-          </li>
-        </ul>
-
-        <p>A Blueprint names the Requirements it means to satisfy, and Telecraft checks that
-        claim rather than trusting it. A team that composed from the library is compliant
-        because of what it built, not because somebody reviewed it afterwards.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <section class="band" aria-labelledby="apply">
-    <div class="band-inner">
+    <div class="band-inner band-wide">
       <p class="band-index" aria-hidden="true">02</p>
       <div class="band-body">
-        <h2 id="apply">Apply it</h2>
-        <p>The renderer compiles a Blueprint to plain OpenTelemetry Collector YAML and opens
-        it in git as a change proposal. Review it, approve it and merge it with the rules your
-        repository already has: history, rollback, approval and audit are git’s job, and
-        Telecraft does not replace any of them.</p>
+        <div class="band-split">
+          <div class="band-words">
+            <h2 id="apply">Apply it</h2>
+            <p>The renderer compiles a Blueprint to plain OpenTelemetry Collector YAML and
+            opens it in git as a change proposal. Review it, approve it and merge it with the
+            rules your repository already has: history, rollback, approval and audit are
+            git’s job, and Telecraft does not replace any of them.</p>
 
-        <!-- The change proposal, because this is the point at which a
-             composition stops being one team's draft and becomes something
-             the organisation agreed to. Plain collector YAML, so it can be
-             read by somebody who has never opened the console. -->
-        <figure class="panel">
-          <figcaption class="panel-head">
-            <span class="panel-title">Render platform/edge-standard v4 for Tier C1</span>
-            <span class="chip">Change proposal</span>
-          </figcaption>
-          <div class="panel-body">
-            <pre class="excerpt"><code>rendered/production/c1/collector.yaml
+            <h3>Two ways to reach a collector, chosen one collector at a time</h3>
+            <ul class="lexicon">
+              <li class="entry">
+                <h4 class="entry-name">Telecraft serves it</h4>
+                <p class="entry-what">A stateless OpAMP server hands the merged configuration
+                to an OpAMP Supervisor beside each collector. A Rollout moves a Cohort at a
+                time, and each collector reports back what it is actually running.</p>
+                <p class="entry-cost"><span class="stamp">Costs you</span> a Supervisor beside
+                each served collector</p>
+              </li>
+              <li class="entry">
+                <h4 class="entry-name">Your GitOps serves it</h4>
+                <p class="entry-what">The rendered YAML sits in git and your existing delivery
+                pipeline applies it, exactly as it applies everything else. Telecraft is not
+                in the loop at all.</p>
+                <p class="entry-cost"><span class="stamp">Costs you</span> nothing you are not
+                already running</p>
+              </li>
+            </ul>
+
+            <p>Neither route puts Telecraft in the telemetry path. It is never a collector, a
+            gateway or a hop, so if it stops, nothing stops flowing.</p>
+          </div>
+
+          <!-- The merge and what follows it. Without script this is the
+               proposal as git would show it, which is the part a reviewer
+               actually reads; the script adds the Rollout, because a Cohort
+               moving one at a time is a thing that happens over time and a
+               still picture of it is a picture of one moment. -->
+          <div class="band-demo">
+            <figure class="panel demo" data-demo="rollout">
+              <figcaption class="panel-head">
+                <span class="panel-title">Render platform/edge-standard v4 for Tier C1</span>
+                <span class="chip">Change proposal</span>
+              </figcaption>
+              <div class="panel-body">
+                <pre class="excerpt"><code>rendered/production/c1/collector.yaml
 
   processors:
     batch:
@@ -262,147 +305,137 @@ satisfies:
       metrics:
 -       processors: [batch]
 +       processors: [k8sattributes, batch]</code></pre>
-            <p class="panel-note">
-              <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
-              Reviewed by the Owners the estate names, and merged by them.
-            </p>
+                <div data-demo-static>
+                  <p class="panel-note">
+                    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.2 11.8 13 4.8"/></svg>
+                    Merged, then rolled out one Cohort at a time.
+                  </p>
+                </div>
+                <div class="demo-live" hidden data-demo-live></div>
+              </div>
+            </figure>
           </div>
-        </figure>
-
-        <h3>Two ways to reach a collector, chosen one collector at a time</h3>
-        <div class="two-up">
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">Telecraft serves it</span>
-            </figcaption>
-            <div class="panel-body">
-              <p class="panel-note">A stateless OpAMP server hands the merged configuration to
-              an OpAMP Supervisor beside each collector. A Rollout moves a Cohort at a time,
-              and the collector reports back what it is actually running.</p>
-              <p class="panel-cost"><span class="stamp">Costs you</span> a Supervisor beside
-              each served collector</p>
-            </div>
-          </figure>
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">Your GitOps serves it</span>
-            </figcaption>
-            <div class="panel-body">
-              <p class="panel-note">The rendered YAML sits in git and your existing delivery
-              pipeline applies it, exactly as it applies everything else. Telecraft is not in
-              the loop at all.</p>
-              <p class="panel-cost"><span class="stamp">Costs you</span> nothing you are not
-              already running</p>
-            </div>
-          </figure>
         </div>
-        <p class="two-up-note">Neither route puts Telecraft in the telemetry path. It is never
-        a collector, a gateway or a hop, so if it stops, nothing stops flowing.</p>
       </div>
     </div>
   </section>
 
   <section class="band" aria-labelledby="validate">
-    <div class="band-inner">
+    <div class="band-inner band-wide">
       <p class="band-index" aria-hidden="true">03</p>
       <div class="band-body">
-        <h2 id="validate">Validate it</h2>
-        <p>Telecraft reads the estate three ways. Each reading has one definition and one
-        source; they compose, and they are never blended.</p>
+        <div class="band-split">
+          <div class="band-words">
+            <h2 id="validate">Validate it</h2>
+            <p>Telecraft reads the estate three ways. Each reading has one definition and one
+            source; they compose, and they are never blended.</p>
 
-        <!-- One geometry, three strokes. The line is the same pulse the hero
-             draws, rendered three times, because the point of the section is
-             that these are three readings of one estate rather than three
-             different things. Pattern carries the difference and each row
-             states its own name beside it, so nothing here is read off a hue
-             (ADR-0047 §5). -->
-        <ul class="readings readings-explained">
-          <li class="reading">
-            <p class="reading-name">Intended</p>
-            <svg class="trace trace-intended" viewBox="0 0 240 24" aria-hidden="true">
-              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
-              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
-            </svg>
-            <p class="reading-source">The configuration in git, pinned to a commit rather than
-            a branch tip.</p>
-          </li>
-          <li class="reading">
-            <p class="reading-name">Effective</p>
-            <svg class="trace trace-effective" viewBox="0 0 240 24" aria-hidden="true">
-              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
-              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
-            </svg>
-            <p class="reading-source">The collector’s own report of what it is running. Never
-            what an applier holds, and never what the platform believes it sent.</p>
-          </li>
-          <li class="reading">
-            <p class="reading-name">Observed</p>
-            <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
-              <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
-              <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
-            </svg>
-            <p class="reading-source">The telemetry that landed in your backend over a window,
-            judged against the window each Requirement asked for.</p>
-          </li>
-        </ul>
+            <!-- One geometry, three strokes. The line is the same pulse the
+                 hero draws, rendered three times, because these are three
+                 readings of one estate rather than three different things.
+                 Pattern carries the difference and each row states its own
+                 name beside it, so nothing here is read off a hue
+                 (ADR-0047 §5). -->
+            <ul class="readings readings-explained">
+              <li class="reading">
+                <p class="reading-name">Intended</p>
+                <svg class="trace trace-intended" viewBox="0 0 240 24" aria-hidden="true">
+                  <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                  <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+                </svg>
+                <p class="reading-source">The configuration in git, pinned to a commit rather
+                than a branch tip.</p>
+              </li>
+              <li class="reading">
+                <p class="reading-name">Effective</p>
+                <svg class="trace trace-effective" viewBox="0 0 240 24" aria-hidden="true">
+                  <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                  <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+                </svg>
+                <p class="reading-source">The collector’s own report of what it is running.
+                Never what an applier holds, and never what the platform believes it
+                sent.</p>
+              </li>
+              <li class="reading">
+                <p class="reading-name">Observed</p>
+                <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
+                  <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
+                  <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+                </svg>
+                <p class="reading-source">The telemetry that landed in your backend over a
+                window, judged against the window each Requirement asked for.</p>
+              </li>
+            </ul>
 
-        <h3>Both of these Services report zero metrics</h3>
-        <p>They are not the same problem, and they do not go to the same team. Crossing what a
-        collector reports with what arrived is what tells them apart.</p>
+            <h3>Both of these Services report zero metrics</h3>
+            <p>They are not the same problem, and they do not go to the same team. A
+            dashboard scores both as zero. Crossing what a collector reports with what
+            arrived is what sends the first to the platform team as a defect, and the second
+            to the team that owns the Service as work they have not done yet.</p>
 
-        <!-- The distinction the product exists to make, shown as two cards
-             rather than as the outcome table. The table is the model; this is
-             the reading. Severity colour is deliberately absent here as
-             everywhere (ADR-0047 §5): the outcome is read off a drawn mark
-             and its word, which is why a card survives greyscale. -->
-        <div class="two-up">
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">checkout-api</span>
-              <span class="chip">production</span>
-            </figcaption>
-            <div class="panel-body">
-              <pre class="excerpt"><code>configured   yes
+            <p>Every reading also carries a Known flag, so a provider that cannot answer says
+            so, with a cause, and no evidence is never quietly treated as a pass. The
+            <a href="/docs/concepts/">full set of outcomes</a> is in the documentation.</p>
+
+            <p>Composing, applying and validating are three capabilities over one model.
+            Adopt any one of them without the others, in any order; using one is never a
+            condition of using another.</p>
+          </div>
+
+          <!-- The cross, as two cards rather than as a table. Without script
+               they are the two readings the section is about; with it, the
+               two facts behind each verdict are yours to change, which is
+               the whole of the model and shorter than a seven row table.
+               Severity colour is deliberately absent here as everywhere
+               (ADR-0047 §5): the outcome is read off a drawn mark and its
+               word, which is why a card survives greyscale. -->
+          <div class="band-demo">
+            <div class="verdicts" data-demo="cross">
+              <figure class="panel" data-service="checkout-api" data-owner="platform/ingest" data-configured="yes" data-arriving="no">
+                <figcaption class="panel-head">
+                  <span class="panel-title">checkout-api</span>
+                  <span class="chip">production</span>
+                </figcaption>
+                <div class="panel-body">
+                  <div data-demo-static>
+                    <pre class="excerpt"><code>configured   yes
 arriving     no</code></pre>
-              <p class="panel-note">
-                <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5 12.5 12.5"/><path d="M12.5 3.5 3.5 12.5"/></svg>
-                Somebody configured this and it is not working.
-              </p>
-              <p class="panel-cost"><span class="stamp">Owner</span> platform/ingest</p>
-            </div>
-          </figure>
-          <figure class="panel">
-            <figcaption class="panel-head">
-              <span class="panel-title">basket-svc</span>
-              <span class="chip">production</span>
-            </figcaption>
-            <div class="panel-body">
-              <pre class="excerpt"><code>configured   no
+                  </div>
+                  <div class="demo-live" hidden data-demo-live></div>
+                  <p class="verdict" data-verdict>
+                    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5 12.5 12.5"/><path d="M12.5 3.5 3.5 12.5"/></svg>
+                    <span class="verdict-said" data-verdict-said>Somebody configured this and it is not working.</span>
+                  </p>
+                  <p class="panel-cost"><span class="stamp">Owner</span> <span data-verdict-owner>platform/ingest</span></p>
+                </div>
+              </figure>
+              <figure class="panel" data-service="basket-svc" data-owner="team/basket" data-configured="no" data-arriving="no">
+                <figcaption class="panel-head">
+                  <span class="panel-title">basket-svc</span>
+                  <span class="chip">production</span>
+                </figcaption>
+                <div class="panel-body">
+                  <div data-demo-static>
+                    <pre class="excerpt"><code>configured   no
 arriving     no</code></pre>
-              <p class="panel-note">
-                <svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg>
-                Nobody configured it at all.
-              </p>
-              <p class="panel-cost"><span class="stamp">Owner</span> team/basket</p>
+                  </div>
+                  <div class="demo-live" hidden data-demo-live></div>
+                  <p class="verdict" data-verdict>
+                    <svg class="mark mark-solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5 14 13H2Z"/></svg>
+                    <span class="verdict-said" data-verdict-said>Nobody configured it at all.</span>
+                  </p>
+                  <p class="panel-cost"><span class="stamp">Owner</span> <span data-verdict-owner>team/basket</span></p>
+                </div>
+              </figure>
             </div>
-          </figure>
+          </div>
         </div>
-        <p class="two-up-note">A dashboard scores both of these as zero. Telling them apart is
-        what sends the first to the platform team as a defect and the second to the team that
-        owns the Service as work they have not done yet. Every reading also carries a Known
-        flag, so a provider that cannot answer says so, with a cause, and no evidence is never
-        quietly treated as a pass. The <a href="/docs/concepts/">full set of outcomes</a> is in
-        the documentation.</p>
-
-        <p>Composing, applying and validating are three capabilities over one model. Adopt any
-        one of them without the others, in any order; using one is never a condition of using
-        another.</p>
       </div>
     </div>
   </section>
 
   <section class="band" aria-labelledby="shape">
-    <div class="band-inner">
+    <div class="band-inner band-wide">
       <p class="band-index" aria-hidden="true">04</p>
       <div class="band-body">
         <h2 id="shape">One binary. A command, or a platform.</h2>
@@ -490,7 +523,7 @@ library_drift       0</span>
   </section>
 
   <section class="band" aria-labelledby="run">
-    <div class="band-inner">
+    <div class="band-inner band-wide">
       <p class="band-index" aria-hidden="true">05</p>
       <div class="band-body">
         <h2 id="run">Run it yourself, or let us run it</h2>
