@@ -52,9 +52,14 @@ jobs:
     permissions:
       # Read the artifacts of the run that triggered this one.
       actions: read
-      # Comment on the pull request, and put the link beside the checks.
+      # Comment on the pull request.
       pull-requests: write
-      statuses: write
+      # Record the preview as a deployment, which is what puts it in the
+      # pull request's Deployments box and in the repository's Environments
+      # tab with a history. It replaces the commit status this used to
+      # write: one fact reported twice is one fact that can disagree with
+      # itself.
+      deployments: write
     steps:
       - name: Take the built site from the build run
         uses: actions/download-artifact@v4
@@ -91,8 +96,56 @@ jobs:
       # fetched rather than added to the project because nothing in this
       # repository builds with it: it is deployment tooling, and putting it in
       # `package.json` would put it in every contributor's `npm ci`.
+      # Opened before the publish, so a run that dies half way is a failed
+      # deployment rather than no record at all.
+      #
+      # One environment, not one per pull request. The Deployments box on a
+      # pull request selects by head SHA, so every pull request still shows
+      # its own; a `preview-pr-N` environment each would read better in the
+      # Environments tab at the cost of a row per pull request ever opened,
+      # and a workflow to tidy them.
+      #
+      # `auto_inactive` is off for the same reason: on, GitHub marks the
+      # previous deployment in this environment inactive, and with several
+      # pull requests open that is always somebody else's live preview.
+      #
+      # `required_contexts` is empty deliberately. It defaults to every
+      # check on the ref, which would refuse to create the deployment while
+      # any of them is still running, and this workflow runs while they are.
+      - name: Open a deployment for this preview
+        id: deployment
+        uses: actions/github-script@v7
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        with:
+          script: |
+            const { data } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.HEAD_SHA,
+              environment: 'preview',
+              description: `Site preview for pull request #${process.env.PR_NUMBER}`,
+              transient_environment: true,
+              auto_merge: false,
+              auto_inactive: false,
+              required_contexts: [],
+            })
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: data.id,
+              state: 'in_progress',
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            })
+            core.setOutput('id', data.id)
+
       - name: Publish to Cloudflare Pages
         id: publish
+        # Reported rather than thrown: the step after this one is what tells
+        # a reviewer the preview is not there, and a job that stopped here
+        # would leave the deployment open and the comment unwritten.
+        continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -109,25 +162,33 @@ jobs:
       # this link stays right as the pull request is pushed to, and a reviewer
       # who bookmarked it is never reading a stale build.
       - name: Say where the preview is
+        if: always() && steps.deployment.outputs.id
         uses: actions/github-script@v7
         env:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
           PREVIEW_URL: https://${{ steps.pr.outputs.alias }}.${{ env.PAGES_PROJECT }}.pages.dev
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           BUILD_RUN: ${{ github.event.workflow_run.id }}
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
+          PUBLISHED: ${{ steps.publish.outcome }}
         with:
           script: |
             const marker = '<!-- site-preview -->'
             const number = Number(process.env.PR_NUMBER)
             const url = process.env.PREVIEW_URL
+            const published = process.env.PUBLISHED === 'success'
             const build = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.BUILD_RUN}`
-            const body = [
+            const body = published ? [
               marker,
               `**Preview:** ${url}`,
               '',
               `The whole site, built from this branch and the documentation on telecraft's \`main\`. The link points at this pull request's latest build, so it stays right as you push.`,
               '',
               `Landing page at \`/\`, documentation at \`/docs/\`. Built by [this run](${build}), which also attaches \`_site\` as an artifact if you would rather serve it yourself.`,
+            ].join('\n') : [
+              marker,
+              '**Preview:** the publish step failed, so there is nothing to look at yet.',
+              '',
+              `The site built, so this is the publish and not the tree. [The run](${build}) has the error, and \`_site\` is attached to it if you would rather serve it yourself.`,
             ].join('\n')
 
             const { data: comments } = await github.rest.issues.listComments({
@@ -156,14 +217,18 @@ jobs:
               })
             }
 
-            // Also beside the checks, where somebody scanning the pull request
-            // for whether it is safe to merge is already looking.
-            await github.rest.repos.createCommitStatus({
+            // And the deployment closes, which is what fills in the
+            // Deployments box on the pull request and the Environments tab.
+            // A failed publish closes it as a failure: a deployment left
+            // open reads as one still running, forever.
+            await github.rest.repos.createDeploymentStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.HEAD_SHA,
-              state: 'success',
-              context: 'preview',
-              target_url: url,
-              description: 'The site as this branch builds it',
+              deployment_id: Number(process.env.DEPLOYMENT_ID),
+              state: published ? 'success' : 'failure',
+              environment_url: published ? url : undefined,
+              log_url: build,
+              description: published
+                ? 'The site as this branch builds it'
+                : 'The preview did not publish',
             })
