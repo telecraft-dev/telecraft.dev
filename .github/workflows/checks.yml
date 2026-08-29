@@ -83,8 +83,13 @@ jobs:
 
       - run: npm test
 
+      # `--strict` turns the generator's warnings into failures. A warning is
+      # a link that did not resolve or a page that fell out of `nav.yaml`,
+      # and on a pull request that is a finding, not a footnote. The deploy
+      # builds without it, deliberately: a warning that arrives in upstream
+      # documentation should surface here, not hold the whole site back.
       - name: The site builds from telecraft's documentation
-        run: npm run build -- --docs telecraft/docs
+        run: npm run build -- --docs telecraft/docs --strict
 
       - name: Nothing the built site fetches comes from another origin
         run: npm run check:external

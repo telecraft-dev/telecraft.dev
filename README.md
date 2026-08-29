@@ -219,6 +219,15 @@ repository, so the workflow never uses it to choose a ref and never
 passes it to a shell script. It reads it once, through `env`, to log
 which commit asked for the build.
 
+Rolling back is a deploy, not a Pages setting. If the bad change is in
+this repository, revert the commit and push; the push builds and
+deploys the site as it was. If it arrived in upstream documentation,
+fix it there or re-run the last green **Deploy Pages** run: a re-run
+keeps this repository at the commit it originally built and reads
+telecraft's `main` as it stands at the re-run. Either way Pages keeps
+serving the previous deploy until the new one lands, behind a cache of
+a few minutes.
+
 `.github/workflows/checks.yml` runs the same rules on every pull request
 and weekly, and deploys nothing.
 
