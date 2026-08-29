@@ -226,9 +226,19 @@ and weekly, and deploys nothing.
 Reading a diff of `index.html` is not reading the page, so every pull request
 gets the whole site at a URL, on Cloudflare Pages, at
 `https://pr-<number>.telecraft.pages.dev`. The link points at that pull
-request's latest build and stays right as you push. It is posted as one
-comment, edited in place, and set as the `preview` commit status beside the
-checks.
+request's latest build and stays right as you push.
+
+It is reported twice, in the two places somebody looks. One comment on the
+pull request, edited in place rather than added to. And a GitHub deployment
+against the `preview` environment, which is what fills in the Deployments box
+on the pull request and gives the repository an Environments tab with a
+history. A publish that fails closes that deployment as a failure and says so
+in the comment, because a deployment left open reads as one still running.
+
+The rest of the site is on the same mechanism already: `telecraft.dev` deploys
+to the `github-pages` environment from `pages.yml`, and the demo does the same
+from telecraft-dev/estate-demo. The preview was the one part still reporting
+itself as a bare commit status, and now it is not.
 
 It is two workflows, and the split is the security design rather than an
 accident of structure.
