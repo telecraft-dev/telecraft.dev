@@ -245,14 +245,15 @@ a.wordmark:hover {
   font-size: clamp(1.9rem, 5.6vw, 3rem);
   line-height: var(--leading-tight);
   letter-spacing: -0.015em;
-  /* The problem is stated in muted ink and the answer in full ink, so the
-     two halves of the sentence are told apart by weight of tone rather than
-     by a second size or a second colour. */
-  color: var(--colour-text-muted);
+  /* One voice, not two tones: the three sentences are the same kind of
+     statement, and the shape of the product is that they are three. */
 }
 
-.h1-lead {
-  color: var(--colour-text);
+/* A line each, at every width. Left to the wrap the three beats fell one and
+   two, which reads as a sentence that ran out rather than a list of three
+   steps, and the list is what the page is about. */
+.h1-beat {
+  display: block;
 }
 
 /* ---- The pulse ----
@@ -750,69 +751,6 @@ a.wordmark:hover {
   margin-top: var(--space-4);
 }
 
-/* ---- The outcome cross ----
-   A table, because it is one: two readings in, one outcome out. The reader
-   can hold a row of it against a row of the console. `base.css` dresses the
-   element; this sets the density and the two column tones. */
-
-.band-body > .cross-scroll {
-  margin-top: var(--space-4);
-  overflow-x: auto;
-}
-
-.cross {
-  width: 100%;
-  min-width: 34rem;
-  border-collapse: collapse;
-  font-size: var(--text-s);
-}
-
-.cross-caption {
-  padding-bottom: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-align: left;
-  color: var(--colour-text-faint);
-}
-
-.cross th,
-.cross td {
-  padding: var(--space-2) var(--space-3) var(--space-2) 0;
-  text-align: left;
-  vertical-align: baseline;
-  border-bottom: 1px solid var(--colour-rule-soft);
-}
-
-.cross thead th {
-  border-bottom: 1px solid var(--colour-rule);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--colour-text-faint);
-}
-
-/* The two readings that go in are set in the mono face and in muted ink,
-   and the outcome that comes out is set in full ink, so an eye running down
-   the table lands on the column that is the answer. */
-.cross-in {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--colour-text-muted);
-  white-space: nowrap;
-}
-
-.cross-out .mono {
-  font-weight: var(--weight-medium);
-  white-space: nowrap;
-}
-
-.cross tbody td:last-child {
-  color: var(--colour-text-muted);
-}
-
 /* ---- The console mockup ----
    The chrome, the environment lens and one row of the shelf, at the size a
    column allows. It is the shape a reader will recognise when they open the
@@ -1264,55 +1202,40 @@ a.wordmark:hover {
   }
 }
 
-/* ---- The three parts ----
-   Rows on hairlines, not a shelf of cards. Each row states its cost, which
-   is the register the whole product is written in (identity.md, "State the
-   cost"). */
+/* ---- The library ----
+   Rows on hairlines, not a shelf of cards. A term and what it is, at the
+   density of a reference rather than a feature list. */
 
-.band-body > .rungs {
+.band-body > .lexicon {
   margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--colour-rule);
 }
 
-.rung {
+.entry {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--colour-rule);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--colour-rule-soft);
 }
 
-.rung-name {
+.entry-name {
   margin: 0;
-  font-size: var(--text-l);
+  font-size: var(--text-m);
 }
 
-.rung-what {
+.entry-what {
   margin: 0;
   max-width: var(--measure);
   color: var(--colour-text-muted);
 }
 
-.rung-cost {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2);
-  margin: 0;
-  font-size: var(--text-s);
-  color: var(--colour-text-muted);
-}
-
 @media (min-width: 48rem) {
-  .rung {
+  .entry {
     grid-template-columns: 10rem minmax(0, 1fr);
     column-gap: var(--space-4);
-  }
-
-  .rung-name {
-    grid-row: span 2;
   }
 }
 
