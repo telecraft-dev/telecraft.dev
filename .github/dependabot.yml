@@ -1,0 +1,17 @@
+version: 2
+
+# The workflows pin actions by commit, and the packages are pinned exactly in
+# package.json. Pins that nothing watches only ever grow stale; these two
+# watchers raise the pull request that moves them.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

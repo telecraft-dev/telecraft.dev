@@ -25,14 +25,26 @@ on:
 permissions:
   contents: read
 
+# One build per pull request at a time, newest wins. A push while the last
+# build is still running supersedes it; the stale build is cancelled here
+# rather than finishing late and racing the deploy stage.
+concurrency:
+  group: preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   preview:
     name: Build a preview of the site
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      # Nothing here pushes, so the checkout does not keep the token on disk
+      # for the branch's own install scripts to read.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: npm
@@ -42,7 +54,7 @@ jobs:
       # different documentation tree than the one production builds from is a
       # preview of a site nobody is going to get.
       - name: Check out the documentation from telecraft-dev/telecraft
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: telecraft-dev/telecraft
           ref: main
@@ -61,7 +73,7 @@ jobs:
 
       # `_site/` holds the landing page, the documentation and every asset,
       # and it is what `pages.yml` deploys.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: site-preview
           path: _site
@@ -82,7 +94,7 @@ jobs:
           mkdir -p meta
           printf '%s\n' "$PR_NUMBER" > meta/pr-number
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: github.event_name == 'pull_request'
         with:
           name: preview-meta
