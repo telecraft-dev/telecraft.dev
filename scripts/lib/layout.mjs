@@ -147,7 +147,17 @@ ${description ? `<meta name="description" content="${escapeHtml(description)}">\
 <body>
 <a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
-  <a class="wordmark" href="${href('index.html')}"><span class="wordmark-lead">Tele</span>craft</a>
+  <!-- The bare mark, at ascender height beside the wordmark, which is the
+       arrangement the pack's own horizontal lockup uses. The geometry is
+       telecraft's docs/branding/pack/telecraft-mark-mono.svg unchanged; the
+       fills are tokens rather than the hex the pack writes, because the pack
+       ships one file per ground and a page that follows the reader's theme
+       needs one drawing that works on both. It supports the word and does
+       not replace it, so the wordmark stays live text.
+
+       This header is the one the landing page repeats by hand. Change it
+       here and change it in index.html. -->
+  <a class="wordmark" href="${href('index.html')}"><svg class="wordmark-mark" viewBox="0 0 18 16" aria-hidden="true"><rect x="0" y="0" width="2" height="16" rx="1" fill="var(--brand)"/><rect x="5" y="0" width="13" height="3" rx="1.5" fill="var(--colour-text)"/><rect x="5" y="6.5" width="10" height="3" rx="1.5" fill="var(--colour-text-muted)"/><rect x="5" y="13" width="7" height="3" rx="1.5" fill="var(--colour-text-faint)"/></svg><span class="wordmark-lead">Tele</span>craft</a>
   <nav class="topnav" aria-label="Site">
     <a href="${href(docsHomeOutput)}"${current === `/${docsHomeOutput}` ? ' aria-current="page"' : ''}>Documentation</a>
     <a href="${escapeHtml(repo || 'https://github.com/telecraft-dev/telecraft')}" rel="noopener">GitHub</a>

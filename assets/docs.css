@@ -115,11 +115,25 @@ body {
    the one page that is nothing but the mark; the two sheets never load
    together. */
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-m);
   font-weight: var(--weight-bold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
+}
+
+/* The pack's clear space rule is two reading bands on every side, and its
+   minimum is 12px tall; `--text-m` clears both. */
+.wordmark-mark {
+  flex: none;
+  /* Taller than the caps beside it, because the mark is measured from its
+     datum and the wordmark is measured from its baseline. At `--text-m` this
+     is 18px, comfortably over the pack's 12px floor for a bare mark. */
+  height: 1.3em;
+  width: auto;
 }
 
 .wordmark-lead {

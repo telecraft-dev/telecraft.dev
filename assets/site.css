@@ -50,6 +50,16 @@
   --hero-width: 72rem;
   /* The drafting margin the section numbers hang in, left of the datum. */
   --rail: 4.5rem;
+
+  /* What sits on a brand fill. `tokens.css` carries `--brand` for both
+     themes and is vendored from the console, so its twin lives here rather
+     than as a fork of a file `tools/vendor.mjs check` holds byte for byte. */
+  --brand-ink: var(--colour-bg);
+}
+
+:root[data-theme='light'] {
+  /* The light brand is a dark bronze, so the ink on it goes the other way. */
+  --brand-ink: #ffffff;
 }
 
 body {
@@ -69,11 +79,13 @@ body {
    children the rhythm spaces, and the two rules tie; the later one wins on
    the elements it names. */
 
-.band-body > * {
+.band-body > *,
+.band-words > * {
   margin: 0;
 }
 
-.band-body > * + * {
+.band-body > * + *,
+.band-words > * + * {
   margin-top: var(--space-4);
 }
 
@@ -97,8 +109,22 @@ body {
 
 /* A heading that opens a new beat wants more air above it than a paragraph
    does. This is the only place the rhythm varies. */
-.band-body > h3 {
+.band-body > h3,
+.band-words > h3 {
   margin-top: var(--space-6);
+}
+
+/* The beat is marked as well as spaced, in the one colour this page may use
+   where there is no data: a short rule in the drafting margin of the column,
+   which is the same gesture the band number makes in the margin of the page. */
+.band-body > h3::before,
+.band-words > h3::before {
+  content: '';
+  display: block;
+  width: 2rem;
+  height: 2px;
+  margin-bottom: var(--space-3);
+  background: var(--brand);
 }
 
 /* ---- The chrome ----
@@ -159,6 +185,29 @@ body {
 a.wordmark:hover {
   text-decoration: underline;
   text-underline-offset: 0.3em;
+}
+/* The mark beside the word. The pack's clear space rule is two reading bands,
+   three eighths of the mark's height, on every side; at 1em tall that is 6px
+   and the gap here is 8. Its minimum is 12px tall, which `--text-m` clears. */
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.wordmark-mark {
+  flex: none;
+  /* Taller than the caps beside it, because the mark is measured from its
+     datum and the wordmark is measured from its baseline. At `--text-m` this
+     is 18px, comfortably over the pack's 12px floor for a bare mark. */
+  height: 1.3em;
+  width: auto;
+}
+
+/* The nameplate carries the pulse instead, which is the same measurement
+   drawn long, so a second mark beside it would be the drawing twice. */
+.wordmark-plate .wordmark-mark {
+  display: none;
 }
 
 /* A nameplate, not a headline. The headline is the headline: the wordmark
@@ -349,8 +398,8 @@ a.wordmark:hover {
 .action-lead {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-1);
-  background: var(--colour-fill);
-  color: var(--colour-on-fill);
+  background: var(--brand);
+  color: var(--brand-ink);
   text-decoration: none;
 }
 
@@ -546,7 +595,8 @@ a.wordmark:hover {
   list-style: none;
 }
 
-.band-body > .readings-explained {
+.band-body > .readings-explained,
+.band-words > .readings-explained {
   margin-top: var(--space-5);
   border-top: 1px solid var(--colour-rule);
 }
@@ -853,6 +903,11 @@ a.wordmark:hover {
   color: var(--colour-text-muted);
 }
 
+.console-card-band .mark {
+  width: 12px;
+  height: 12px;
+}
+
 /* ---- The deployment tabs ----
    Two shapes of the same release, so they are two views of one section
    rather than two sections. Both panels are in the document and both are
@@ -1133,6 +1188,19 @@ a.wordmark:hover {
   border-bottom: 1px solid var(--colour-rule);
 }
 
+/* Alternating grounds, so the page has a beat a reader can feel at the
+   scroll bar rather than one flat field seven sections long. One step of
+   the surface scale, which is the same step a panel takes off the page. */
+.band:nth-of-type(even) {
+  background: var(--colour-surface);
+}
+
+/* A panel on the raised ground would disappear into it, so on those bands
+   it takes the page's own ground instead. */
+.band:nth-of-type(even) .panel {
+  background: var(--colour-bg);
+}
+
 .band-last {
   border-bottom: 0;
 }
@@ -1152,12 +1220,16 @@ a.wordmark:hover {
   margin: 0 auto;
 }
 
+.band-split > * {
+  margin: 0;
+}
+
 .band-index {
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--text-s);
   letter-spacing: 0.12em;
-  color: var(--colour-text-faint);
+  color: var(--brand);
 }
 
 /* One breakpoint for the whole page, and 48rem is where the drafting margin
@@ -1206,7 +1278,8 @@ a.wordmark:hover {
    Rows on hairlines, not a shelf of cards. A term and what it is, at the
    density of a reference rather than a feature list. */
 
-.band-body > .lexicon {
+.band-body > .lexicon,
+.band-words > .lexicon {
   margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
@@ -1237,6 +1310,391 @@ a.wordmark:hover {
     grid-template-columns: 10rem minmax(0, 1fr);
     column-gap: var(--space-4);
   }
+
+  /* Under the description it belongs to, not under the term. Auto placement
+     put it in the term's column, where it wrapped at ten rem and read as a
+     second definition of the word above it. */
+  .entry-cost {
+    grid-column: 2;
+  }
+}
+
+/* ---- Wide bands, split in two ----
+   The hero puts the words beside the thing they describe, and a band that
+   has something to show wants the same shape. `.band-wide` takes the hero's
+   measure and `.band-split` divides it: prose on the left at the same
+   measure it always had, and the panel on the right.
+
+   Which bands get it is a rule and not a judgement: a band that shows
+   something takes the wide measure, and a band that is only words keeps the
+   reading measure it always had. So 01 to 05 are wide and 06 and 07 are
+   not.
+
+   A second breakpoint, and the only one on the page besides 48rem. The
+   split cannot open at 48rem because two columns out of 43.5rem of body
+   leave the prose at about twenty characters, which is not a measure. It
+   opens at 60rem, where the narrower half is still wider than the panel is
+   on a phone, and the columns are set in fractions from there so a laptop
+   and a wide display both divide what they have rather than one of them
+   being sized for the other. */
+
+.band-wide {
+  max-width: var(--hero-width);
+}
+
+.band-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.entry-cost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-s);
+  color: var(--colour-text-muted);
+}
+
+.verdicts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 60rem) {
+  .band-split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    /* Two steps of the scale, because the gutter between a column of prose
+       and a panel is the widest gap on the page and the scale stops at 32px. */
+    gap: calc(var(--space-6) * 1.5);
+  }
+
+  /* The panel sits at the head of its column and travels with the words.
+     It was pinned, which held it in place for the length of the prose and
+     read as a panel that had come loose from the paragraph it belonged to. */
+  .band-demo {
+    align-self: start;
+  }
+}
+
+/* ---- The live panels ----
+   `assets/demos.js` builds these; the markup they replace is the same content
+   standing still. Everything here is a control or a state, so it is drawn the
+   way the console draws controls and states: a hairline, a mono label, and no
+   colour carrying a meaning a word does not also carry (ADR-0047 §5). */
+
+.demo-live {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.demo-live[hidden],
+.panel-cost[hidden] {
+  display: none;
+}
+
+.demo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.demo-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+.demo-choice {
+  display: inline-flex;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  overflow: hidden;
+}
+
+.demo-opt,
+.toggle-opt {
+  padding: 2px var(--space-2);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+  cursor: pointer;
+}
+
+.demo-choice .demo-opt + .demo-opt,
+.toggle-opts .toggle-opt + .toggle-opt {
+  border-left: 1px solid var(--colour-rule);
+}
+
+/* The chosen one is filled rather than tinted, which is the one way this
+   page marks a control as on and the only one that survives greyscale. */
+.demo-opt[aria-pressed='true'],
+.toggle-opt[aria-pressed='true'] {
+  background: var(--colour-fill);
+  color: var(--colour-on-fill);
+}
+
+.demo-bar > .demo-opt {
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  padding: 2px var(--space-3);
+}
+
+.demo-opt[disabled] {
+  color: var(--colour-text-faint);
+  cursor: default;
+}
+
+/* ---- The lanes ---- */
+
+.lanes,
+.claims,
+.cohorts,
+.lane-parts,
+.palette-parts,
+.cohort-nodes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lanes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.lane {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.lane-name,
+.cohort-name,
+.claims-head {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+.lane-parts,
+.palette-parts,
+.cohort-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.part,
+.node {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  background: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--colour-text);
+  white-space: nowrap;
+}
+
+.part {
+  cursor: pointer;
+}
+
+/* A part in a lane can be taken out, and the glyph is what says so. The
+   `+` and a barred entry are not removable, so neither carries it. */
+.lane-parts .part:not(.part-add)::after {
+  content: '\00d7';
+  color: var(--colour-text-faint);
+}
+
+.part:hover,
+.part:focus-visible {
+  border-color: var(--colour-text-muted);
+}
+
+.part-add {
+  border-style: dashed;
+  color: var(--colour-text-muted);
+}
+
+.part-barred {
+  border-style: dotted;
+  color: var(--colour-text-faint);
+  cursor: not-allowed;
+}
+
+.palette {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+.demo-empty {
+  font-size: var(--text-xs);
+  color: var(--colour-text-faint);
+}
+
+/* ---- The claims ---- */
+
+.claims {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--colour-rule);
+}
+
+.claim {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.claim .mark {
+  margin-top: 2px;
+}
+
+.claim-name {
+  font-family: var(--font-mono);
+  color: var(--colour-text);
+}
+
+.claim-said {
+  grid-column: 2;
+  color: var(--colour-text-muted);
+}
+
+.demo-foot {
+  margin: 0;
+}
+
+.demo-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* ---- The rollout ---- */
+
+.cohorts {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cohort {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.node {
+  color: var(--colour-text-faint);
+}
+
+.node-version {
+  color: inherit;
+}
+
+/* A collector that has reported the new version is filled, the way every
+   other settled state on this page is. */
+.node-done {
+  border-color: var(--colour-text-muted);
+  color: var(--colour-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .node {
+    transition: border-color 200ms ease, color 200ms ease;
+  }
+}
+
+/* ---- The cross ---- */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.toggle-name {
+  flex: none;
+  width: 6rem;
+  font-family: var(--font-mono);
+  color: var(--colour-text-muted);
+}
+
+.toggle-opts {
+  display: inline-flex;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+  overflow: hidden;
+}
+
+/* ---- Severity and signal, borrowed from the console ----
+   Two sets of colour that already exist in `tokens.css`, contrast verified
+   on both grounds and separated under simulated deuteranopia and
+   protanopia. Neither carries anything on its own: a severity tone always
+   sits on a mark whose shape says the same thing, and a lane hue never
+   appears without its lane name beside it, which is the rule ADR-0047 §5
+   extends to this site by name.
+
+   The site used to have neither, on the reasoning that a marketing page has
+   no state to report. It does: every panel on it reports one, and reporting
+   it in the ink of the product is more honest than reporting it in grey. */
+
+.mark-ok {
+  color: var(--severity-ok);
+}
+
+.mark-advisory {
+  color: var(--severity-advisory);
+}
+
+.mark-violation {
+  color: var(--severity-violation);
+}
+
+/* ---- Signal lanes ---- */
+
+[data-lane='traces'] {
+  --lane: var(--signal-traces);
+}
+
+[data-lane='logs'] {
+  --lane: var(--signal-logs);
+}
+
+[data-lane='metrics'] {
+  --lane: var(--signal-metrics);
+}
+
+.lane {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--lane);
+}
+
+.lane-name,
+.console-card-band[data-lane] {
+  color: var(--lane, var(--colour-text-faint));
 }
 
 /* ---- The principles ----
@@ -1268,6 +1726,7 @@ a.wordmark:hover {
   display: block;
   font-weight: var(--weight-semibold);
   color: var(--colour-text);
+  color: var(--colour-text);
 }
 
 /* ---- The two plates ----
@@ -1291,6 +1750,7 @@ a.wordmark:hover {
   padding: var(--space-5);
   background: var(--colour-surface);
   border: 1px solid var(--colour-rule);
+  border-left: 2px solid var(--brand);
   border-radius: var(--radius-2);
 }
 

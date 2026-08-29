@@ -33,6 +33,7 @@ here: change `nav.yaml` and the site changes.
 | `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
 | `assets/tabs.js` | The landing page's deployment tabs, which are two stacked sections without it |
+| `assets/demos.js` | The landing page's three live panels, which are still pictures without it |
 | `assets/tokens.css` | Vendored. Values only, no selectors |
 | `assets/base.css` | Vendored. The element layer: typography, links, code, tables, controls, focus rings |
 | `assets/fonts/` | Vendored. Two families, three faces, subset and self-hosted, with their licences |
