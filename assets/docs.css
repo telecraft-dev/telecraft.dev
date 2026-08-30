@@ -140,10 +140,69 @@ body {
   color: var(--brand);
 }
 
+/* The word goes left and everything else goes right together, which
+   `space-between` alone stops doing the moment the bar holds three things
+   rather than two. */
 .topnav {
   display: flex;
   gap: var(--space-5);
+  margin-inline-start: auto;
   font-size: var(--text-s);
+}
+
+/* The same shape as the console's chrome control (`.lens-control`) and the
+   front door's, so all three surfaces offer the same three states in the
+   same form. It is `hidden` in the markup and unhidden by `theme.js`,
+   because a control that cannot act is worse than no control, and without
+   script the page still resolves to a complete theme from the bare `:root`
+   block in `tokens.css`. */
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-s);
+  white-space: nowrap;
+}
+
+.theme-control select {
+  font: inherit;
+}
+
+/* The narrowest bars have no room for the word, and the select says what it
+   is: the options are the three states spelled out. It is taken off the
+   screen rather than out of the document, because it is the control's
+   accessible name.
+
+   The gaps close with it. This bar does not wrap at any width a phone has,
+   because it is sticky and a second line of chrome is a second line a reader
+   never gets back; it is allowed to as a last resort, because a control run
+   off the edge of the screen is worse than a bar one line taller. */
+@media (max-width: 34rem) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    padding-inline: var(--space-3);
+  }
+
+  .topnav {
+    gap: var(--space-3);
+  }
+
+  /* On the line it wraps onto it goes to the same edge it sits at when it
+     does not wrap, so the bar reads as one group either way. */
+  .theme-control {
+    margin-inline-start: auto;
+  }
+
+  .theme-control > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* Interactive text is told apart by its underline and its full-strength ink
@@ -577,9 +636,8 @@ body {
 }
 
 /* ---- The foot ----
-   The same three things the front door's foot carries (where to edit the
-   page, the colophon, and the theme control) laid out the same way, so a
-   reader who arrives from the landing page finds them where they left them. */
+   Where to edit the page, and the colophon the front door's foot carries in
+   the same words. The theme control is in the bar on both surfaces. */
 
 .pagefoot {
   display: flex;
@@ -600,24 +658,6 @@ body {
 
 .colophon {
   letter-spacing: 0.04em;
-}
-
-/* The same shape as the console's chrome control (`.lens-control`) and the
-   front door's, so all three surfaces offer the same three states in the
-   same form. It is `hidden` in the markup and unhidden by `theme.js`,
-   because a control that cannot act is worse than no control, and without
-   script the page still resolves to a complete theme from the bare `:root`
-   block in `tokens.css`. */
-.theme-control {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  white-space: nowrap;
-}
-
-.theme-control select {
-  font: inherit;
-  font-size: var(--text-xs);
 }
 
 /* ---- Narrow ----

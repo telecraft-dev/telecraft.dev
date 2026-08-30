@@ -59,8 +59,8 @@
 </head>
 <body>
 <!-- The chrome is shared with the documentation site, which generates its
-     pages against exactly this shape: `.topbar` holding an `a.wordmark` and a
-     `nav.topnav`. Change it here and change it there. -->
+     pages against exactly this shape: `.topbar` holding an `a.wordmark`, a
+     `nav.topnav` and the theme control. Change it here and change it there. -->
 <header class="topbar">
   <!-- The bare mark, at ascender height beside the wordmark, which is the
        arrangement the pack's own horizontal lockup uses. The geometry is
@@ -74,6 +74,17 @@
     <a href="/docs/">Documentation</a>
     <a href="https://github.com/telecraft-dev/telecraft">GitHub</a>
   </nav>
+  <!-- Unhidden by `assets/theme.js`: a control that cannot act is worse than
+       no control, and without script the page still resolves to a complete
+       theme from the bare :root block. -->
+  <label class="theme-control" hidden>
+    <span>Theme</span>
+    <select id="theme-choice">
+      <option value="system">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  </label>
 </header>
 
 <main>
@@ -772,20 +783,7 @@ library_drift       0</span>
   and run it in production for your own estate at no cost. Two things the licence does not
   permit, offering Telecraft to third parties as a hosted or managed service, and removing the
   licensing notices. It is source-available, not open source.</p>
-  <div class="foot-row">
-    <p class="colophon"><a href="https://github.com/telecraft-dev/telecraft/blob/main/LICENSE">Elastic License 2.0</a> · © 2026 the Telecraft project</p>
-    <!-- Unhidden by `assets/theme.js`: a control that cannot act is worse
-         than no control, and without script the page still resolves to a
-         complete theme from the bare :root block. -->
-    <label class="theme-control" hidden>
-      <span>Theme</span>
-      <select id="theme-choice">
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-    </label>
-  </div>
+  <p class="colophon"><a href="https://github.com/telecraft-dev/telecraft/blob/main/LICENSE">Elastic License 2.0</a> · © 2026 the Telecraft project</p>
 </footer>
 </body>
 </html>

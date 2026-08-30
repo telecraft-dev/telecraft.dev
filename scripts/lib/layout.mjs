@@ -87,14 +87,14 @@ const COLOPHON = `<p class="colophon"><a href="https://github.com/telecraft-dev/
 // Unhidden by `assets/theme.js`, which finds it by the id and unhides its
 // closest `.theme-control`. Identical markup to the landing page's, because
 // one script serves both.
-const THEME_CONTROL = `    <label class="theme-control" hidden>
-      <span>Theme</span>
-      <select id="theme-choice">
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-    </label>`;
+const THEME_CONTROL = `  <label class="theme-control" hidden>
+    <span>Theme</span>
+    <select id="theme-choice">
+      <option value="system">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  </label>`;
 
 /**
  * Render one documentation page.
@@ -155,13 +155,14 @@ ${description ? `<meta name="description" content="${escapeHtml(description)}">\
        needs one drawing that works on both. It supports the word and does
        not replace it, so the wordmark stays live text.
 
-       This header is the one the landing page repeats by hand. Change it
-       here and change it in index.html. -->
+       This header is the one the landing page repeats by hand, theme
+       control and all. Change it here and change it in index.html. -->
   <a class="wordmark" href="${href('index.html')}"><svg class="wordmark-mark" viewBox="0 0 18 16" aria-hidden="true"><rect x="0" y="0" width="2" height="16" rx="1" fill="var(--brand)"/><rect x="5" y="0" width="13" height="3" rx="1.5" fill="var(--colour-text)"/><rect x="5" y="6.5" width="10" height="3" rx="1.5" fill="var(--colour-text-muted)"/><rect x="5" y="13" width="7" height="3" rx="1.5" fill="var(--colour-text-faint)"/></svg><span class="wordmark-lead">Tele</span>craft</a>
   <nav class="topnav" aria-label="Site">
     <a href="${href(docsHomeOutput)}"${current === `/${docsHomeOutput}` ? ' aria-current="page"' : ''}>Documentation</a>
     <a href="${escapeHtml(repo || 'https://github.com/telecraft-dev/telecraft')}" rel="noopener">GitHub</a>
   </nav>
+${THEME_CONTROL}
 </header>
 <div class="shell">
 ${sidebar}
@@ -172,7 +173,6 @@ ${content}
     <footer class="pagefoot">
       ${editLink}
       ${COLOPHON}
-${THEME_CONTROL}
     </footer>
   </main>
 ${toc}

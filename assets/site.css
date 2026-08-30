@@ -128,13 +128,18 @@ body {
 }
 
 /* ---- The chrome ----
-   `.topbar`, `a.wordmark` and `nav.topnav` are the shape the documentation
-   site generates against. Both surfaces are the same site or neither is. */
+   `.topbar`, `a.wordmark`, `nav.topnav` and the theme control are the shape
+   the documentation site generates against. Both surfaces are the same site
+   or neither is.
+
+   The bar carries a select, so it centres rather than sitting on a baseline:
+   a form control's baseline is its text's, which drops the box a reader sees
+   below the words beside it. */
 
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3) var(--space-5);
   padding: var(--space-3) var(--space-5);
@@ -142,11 +147,48 @@ body {
   border-bottom: 1px solid var(--colour-rule);
 }
 
+/* The word goes left and everything else goes right together, which
+   `space-between` alone stops doing the moment the bar holds three things
+   rather than two. */
 .topnav {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-5);
+  margin-inline-start: auto;
   font-size: var(--text-m);
+}
+
+/* The same shape as the console's chrome control (`.lens-control`), so the
+   two surfaces offer the same three states in the same form. It is `hidden`
+   in the markup and unhidden by `theme.js`, because a control that cannot
+   act is worse than no control, and without script the page still resolves
+   to a complete theme from the bare `:root` block. */
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-m);
+  white-space: nowrap;
+}
+
+.theme-control select {
+  font: inherit;
+}
+
+/* The narrowest bars have no room for the word, and the select says what it
+   is: the options are the three states spelled out. It is taken off the
+   screen rather than out of the document, because it is the control's
+   accessible name. */
+@media (max-width: 34rem) {
+  .theme-control > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* Atkinson draws long descenders, and `base.css` says a surface that wants
@@ -1783,33 +1825,7 @@ a.wordmark:hover {
   font-size: var(--text-s);
 }
 
-/* The colophon and the theme control on one line, wrapping to two when
-   there is no room, because neither is worth truncating. */
-.foot-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-5);
-}
-
 .colophon {
   margin: 0;
   letter-spacing: 0.04em;
-}
-
-/* The same shape as the console's chrome control (`.lens-control`): a word
-   and a select, so the two surfaces offer the same three states in the same
-   form. It is `hidden` in the markup and unhidden by `theme.js`, because a
-   control that cannot act is worse than no control, and without script the
-   page still resolves to a complete theme from the bare `:root` block. */
-.theme-control {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  white-space: nowrap;
-}
-
-.theme-control select {
-  font: inherit;
 }
