@@ -14,22 +14,25 @@
  * the lines are stacked in register: a reading is what it is against the
  * line below it.
  *
- * So there are two streams here, not one. Arrivals rotate through the three
- * signals, and both panels on this page are the same estate the markup
- * already writes down in words: metrics are composed, the collector reports
- * them running, and none of them reach the backend. Intended and Effective
- * draw every arrival. Observed draws every arrival but the metrics, and sits
- * on the datum where each of those should have been. That hole is the
- * verdict the panel prints underneath it, and a reader who compares the rows
- * finds it without being told which line to look at.
+ * So there are two streams here, not one. Both panels on this page are the
+ * same estate the markup already writes down in words: metrics are composed,
+ * the collector reports them running, and none of them reach the backend.
+ * Intended and Effective draw every arrival. Observed draws every arrival
+ * but the metrics, and sits on the datum where each of those should have
+ * been. That hole is the verdict the panel prints underneath it, and a
+ * reader who compares the rows finds it without being told which line to
+ * look at.
  *
  * Nothing is read off a hue and nothing is read off the stroke: the stroke
  * still says only how a reading is taken, which is Intended continuous,
  * Effective segmented, Observed sampled, and that is `site.css` rather than
  * anything here.
  *
- * Arrivals come at intervals and heights that do not repeat, so the line
- * never settles into a loop a reader can learn.
+ * Nothing about an arrival is reused. Its silhouette, its height, its
+ * length, the space before it and which signal it carries are all drawn
+ * fresh, and the metrics that Observed never receives are kept off any
+ * cycle a reader could count. There is no sequence here to come round
+ * again, which is the only way a line this small stays worth watching.
  *
  * It starts on the frame the script runs and nothing is staged behind it.
  * The geometry in the markup is the geometry this starts from, so there is
@@ -67,31 +70,73 @@
      rather than a loading bar. */
   var SPEED = 26
 
-  /* One beat, as offsets along the line and deviations from the datum. This
-     is the waveform the markup draws, kept exactly, so the moment the script
-     takes over nothing about the shape changes. */
-  var BEAT = [
-    [0, 0],
-    [8, 8],
-    [16, -8],
-    [24, 5],
-    [32, -5],
-    [40, 0]
-  ]
-  var WIDTH = 40
-
-  /* Arrivals rotate through the signals in the order the panels list them,
-     and every third one is the metrics that never arrive. */
+  /* Metrics is the signal this estate composes, reports running, and never
+     delivers. Nothing else about the three matters here. */
   var METRICS = 2
-  var turn = 0
 
-  /* The two arrivals the markup already draws, so the first frame is the
-     picture that was on screen a moment before it. The second of them is a
-     metrics arrival, which is why the authored Observed line is already flat
-     where the other two peak. */
+  /* One arrival, drawn fresh. Every number in it is redrawn each time, so no
+     two arrivals share a silhouette: a reader learns the family and never
+     the stamp. A spike first, at close to the same height either side of the
+     datum, then swings that decay back onto it, which is the shape the
+     markup already draws and the shape the mark is built from.
+
+     Held between edges rather than left open: the tallest excursion has to
+     stay inside a viewBox 24 units deep with a stroke drawn on it, and the
+     longest arrival has to leave room for the gap after it. */
+  function shape() {
+    var nodes = [[0, 0]]
+    var dev = 6 + Math.random() * 3
+    var swings = 3 + (Math.random() < 0.45 ? 1 : 0)
+    var x = 0
+
+    for (var s = 0; s < swings; s++) {
+      /* The spike is narrow and close to symmetrical; what follows it is
+         wider and smaller, the way a reading settles. */
+      x += s < 2 ? 5 + Math.random() * 3 : 7 + Math.random() * 5
+      nodes.push([x, s % 2 === 0 ? dev : -dev])
+      dev *= s === 0 ? 0.85 + Math.random() * 0.2 : 0.45 + Math.random() * 0.25
+    }
+
+    x += 7 + Math.random() * 5
+    nodes.push([x, 0])
+    return { nodes: nodes, span: x }
+  }
+
+  /* Which signal an arrival carries, kept off any cycle a reader could
+     count. Never two metrics running, so Observed is never blank for two
+     arrivals together, and never four without one, so the hole that is the
+     whole point of the drawing is always about to come round again. Both
+     bounds are on runs rather than on position, which is what keeps it
+     irregular. */
+  var since = 1
+
+  function signal() {
+    if (since >= 3 || (since >= 1 && Math.random() < 0.34)) {
+      since = 0
+      return METRICS
+    }
+    since++
+    return Math.random() < 0.5 ? 0 : 1
+  }
+
+  /* The two arrivals the markup already draws, kept exactly, so the frame
+     the script starts on is the picture that was on screen before it. They
+     are two different silhouettes already. The second is a metrics arrival,
+     which is why the authored Observed line is flat where the other two
+     peak. */
   var beats = [
-    { at: 68, amp: 1, span: WIDTH, signal: 1 },
-    { at: 178, amp: 0.85, span: WIDTH, signal: METRICS }
+    {
+      at: 68,
+      nodes: [[0, 0], [8, 8], [16, -8], [24, 5], [32, -5], [40, 0]],
+      span: 40,
+      signal: 1
+    },
+    {
+      at: 178,
+      nodes: [[0, 0], [8, 7], [16, -7], [24, 0]],
+      span: 24,
+      signal: METRICS
+    }
   ]
   var next = 178
   var phase = 0
@@ -109,25 +154,20 @@
   /* Arrivals far enough apart to be read one at a time, and never twice the
      same distance apart. One gap in five is long, which is what stops the
      rhythm sounding like a metronome, and none of them is long enough to
-     empty the line: the widest spacing an arrival can leave behind it is
-     still narrower than the view, so there is always something to watch. */
+     empty the line: the widest an arrival and the gap behind it can measure
+     together is still narrower than the view, so there is always something
+     to watch. */
   function schedule(span) {
-    var gap = 20 + Math.random() * 70
-    if (Math.random() < 0.2) gap += 50
+    var gap = 18 + Math.random() * 100
+    if (Math.random() < 0.2) gap += 55
     next += span + gap
   }
 
-  /* Height and length both vary, because two arrivals measured off one
-     estate are never the same size either. */
   function ensure(upto) {
     while (next < upto) {
-      turn = (turn + 1) % 3
-      var beat = {
-        at: next,
-        amp: 0.55 + Math.random() * 0.6,
-        span: WIDTH * (0.85 + Math.random() * 0.35),
-        signal: turn
-      }
+      var beat = shape()
+      beat.at = next
+      beat.signal = signal()
       beats.push(beat)
       schedule(beat.span)
     }
@@ -155,12 +195,11 @@
       var at = beats[b].at - phase
       if (at > SPAN + LEAD) break
       if (beats[b].signal === drop) continue
-      var amp = beats[b].amp
-      var scale = beats[b].span / WIDTH
-      for (var n = 0; n < BEAT.length; n++) {
-        var x = at + BEAT[n][0] * scale
+      var nodes = beats[b].nodes
+      for (var n = 0; n < nodes.length; n++) {
+        var x = at + nodes[n][0]
         if (first === null) first = x
-        points.push(round(x) + ',' + round(DATUM - BEAT[n][1] * amp))
+        points.push(round(x) + ',' + round(DATUM - nodes[n][1]))
       }
     }
 
@@ -230,6 +269,6 @@
     start()
   }
 
-  schedule(WIDTH)
+  schedule(24)
   ensure(SPAN + LEAD)
 })()
