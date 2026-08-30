@@ -84,17 +84,33 @@ const SHARED_HEAD = `<!-- The theme, resolved before the first paint. \`tokens.c
 // and linked as the landing page's colophon words and links it.
 const COLOPHON = `<p class="colophon"><a href="https://github.com/telecraft-dev/telecraft/blob/main/LICENSE">Elastic License 2.0</a> · © 2026 the Telecraft project</p>`;
 
-// Unhidden by `assets/theme.js`, which finds it by the id and unhides its
-// closest `.theme-control`. Identical markup to the landing page's, because
-// one script serves both.
-const THEME_CONTROL = `    <label class="theme-control" hidden>
-      <span>Theme</span>
-      <select id="theme-choice">
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-    </label>`;
+// Identical markup to the landing page's, because one script serves both.
+// The comment above it there explains the shape; keep the two in step.
+const THEME_CONTROL = `  <!-- Three states, not two: following the machine is the honest default and
+       a switch cannot say it, so this is a radio group and not a toggle. Its
+       marks are drawn in the sheet's own hairline stroke and each one carries
+       its name for anybody the drawing does not reach. Unhidden by
+       \`assets/theme.js\`: a control that cannot act is worse than no control,
+       and without script the page still resolves to a complete theme from the
+       bare :root block. -->
+  <fieldset class="theme-control" hidden>
+    <legend>Theme</legend>
+    <label class="theme-option" title="Follow the system">
+      <input type="radio" name="theme" value="system">
+      <svg class="theme-mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3.2" width="12" height="8.2" rx="1.3"/><path d="M5.8 13.4h4.4"/></svg>
+      <span>System</span>
+    </label>
+    <label class="theme-option" title="Light">
+      <input type="radio" name="theme" value="light">
+      <svg class="theme-mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.1"/><path d="M8 1.3v1.5M8 13.2v1.5M1.3 8h1.5M13.2 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"/></svg>
+      <span>Light</span>
+    </label>
+    <label class="theme-option" title="Dark">
+      <input type="radio" name="theme" value="dark">
+      <svg class="theme-mark" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.1 9.7A5.7 5.7 0 0 1 6.3 2.9a5.7 5.7 0 1 0 6.8 6.8Z"/></svg>
+      <span>Dark</span>
+    </label>
+  </fieldset>`;
 
 /**
  * Render one documentation page.
@@ -155,13 +171,14 @@ ${description ? `<meta name="description" content="${escapeHtml(description)}">\
        needs one drawing that works on both. It supports the word and does
        not replace it, so the wordmark stays live text.
 
-       This header is the one the landing page repeats by hand. Change it
-       here and change it in index.html. -->
+       This header is the one the landing page repeats by hand, theme
+       control and all. Change it here and change it in index.html. -->
   <a class="wordmark" href="${href('index.html')}"><svg class="wordmark-mark" viewBox="0 0 18 16" aria-hidden="true"><rect x="0" y="0" width="2" height="16" rx="1" fill="var(--brand)"/><rect x="5" y="0" width="13" height="3" rx="1.5" fill="var(--colour-text)"/><rect x="5" y="6.5" width="10" height="3" rx="1.5" fill="var(--colour-text-muted)"/><rect x="5" y="13" width="7" height="3" rx="1.5" fill="var(--colour-text-faint)"/></svg><span class="wordmark-lead">Tele</span>craft</a>
   <nav class="topnav" aria-label="Site">
     <a href="${href(docsHomeOutput)}"${current === `/${docsHomeOutput}` ? ' aria-current="page"' : ''}>Documentation</a>
     <a href="${escapeHtml(repo || 'https://github.com/telecraft-dev/telecraft')}" rel="noopener">GitHub</a>
   </nav>
+${THEME_CONTROL}
 </header>
 <div class="shell">
 ${sidebar}
@@ -172,7 +189,6 @@ ${content}
     <footer class="pagefoot">
       ${editLink}
       ${COLOPHON}
-${THEME_CONTROL}
     </footer>
   </main>
 ${toc}

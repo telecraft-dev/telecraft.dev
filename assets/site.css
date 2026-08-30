@@ -128,13 +128,18 @@ body {
 }
 
 /* ---- The chrome ----
-   `.topbar`, `a.wordmark` and `nav.topnav` are the shape the documentation
-   site generates against. Both surfaces are the same site or neither is. */
+   `.topbar`, `a.wordmark`, `nav.topnav` and the theme control are the shape
+   the documentation site generates against. Both surfaces are the same site
+   or neither is.
+
+   The bar carries a select, so it centres rather than sitting on a baseline:
+   a form control's baseline is its text's, which drops the box a reader sees
+   below the words beside it. */
 
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3) var(--space-5);
   padding: var(--space-3) var(--space-5);
@@ -142,25 +147,94 @@ body {
   border-bottom: 1px solid var(--colour-rule);
 }
 
+/* The word goes left and everything else goes right together, which
+   `space-between` alone stops doing the moment the bar holds three things
+   rather than two. */
 .topnav {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-5);
+  margin-inline-start: auto;
   font-size: var(--text-m);
 }
 
-/* Atkinson draws long descenders, and `base.css` says a surface that wants
-   its rule further from them sets the offset itself. */
-.topnav a,
-.band-body a,
-.foot a {
-  text-underline-offset: 0.2em;
+/* Three drawn marks on one plate, which is the shape a bar can hold at any
+   width the word could not. It is a radio group because there are three
+   states and following the machine is one of them, and it is `hidden` in the
+   markup and unhidden by `theme.js`, because a control that cannot act is
+   worse than no control and the page resolves to a complete theme from the
+   bare `:root` block without it.
+
+   `fieldset` and `legend` bring a border, a padding and a float with them.
+   All of it goes: what the elements are wanted for is the grouping and the
+   name they give it. */
+.theme-control {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
 }
 
-.topnav a:hover,
-.band-body a:hover,
-.foot a:hover {
-  text-decoration-thickness: 2px;
+/* Off the screen, not out of the document: it is the group's name. */
+.theme-control legend,
+.theme-option > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.theme-option {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+}
+
+.theme-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* A plate, not a pill (identity.md): the smallest radius in the scale, and
+   the mark drawn in the same hairline stroke as every other mark on the
+   site. */
+.theme-mark {
+  box-sizing: content-box;
+  width: 16px;
+  height: 16px;
+  padding: 4px;
+  border-radius: var(--radius-1);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--colour-text-faint);
+}
+
+.theme-option:hover .theme-mark {
+  color: var(--colour-text-muted);
+}
+
+/* The chosen one is filled and comes up to full strength, which is how every
+   other settled state on these surfaces reads. */
+.theme-option input:checked + .theme-mark {
+  background: var(--colour-fill);
+  color: var(--colour-chrome);
+}
+
+.theme-option input:focus-visible + .theme-mark {
+  outline: var(--focus-width) solid var(--focus-colour);
+  outline-offset: var(--focus-offset);
 }
 
 /* ---- The wordmark ----
@@ -312,9 +386,11 @@ a.wordmark:hover {
    about. It sits beside the wordmark now rather than under it, at the size
    a nameplate wants.
 
-   The draw is left at the duration it was authored with. `--motion-fast`
-   and `--motion-base` are transition durations (90ms and 160ms) and a
-   line that draws itself over three seconds is not a transition. */
+   It is drawn the moment the page is, and nothing stages it. A line that
+   draws itself in over a few seconds and then hands over to `pulse.js`
+   reads as the page loading twice, which is worse than the flourish was
+   worth. The geometry in the markup is the geometry the script starts from,
+   so a reader never sees the changeover. */
 
 .pulse {
   display: block;
@@ -328,36 +404,6 @@ a.wordmark:hover {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 320;
-  stroke-dashoffset: 320;
-  animation:
-    draw 2.4s ease-out forwards,
-    hum 6s 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes hum {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.55;
-  }
-}
-
-/* `base.css` already collapses every animation under reduced motion, but
-   collapsing this one is not enough: the line's resting state is undrawn,
-   so it has to be told to finish rather than told to stop. */
-@media (prefers-reduced-motion: reduce) {
-  .pulse polyline {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
 }
 
 /* ---- The words in the hero ---- */
@@ -639,6 +685,15 @@ a.wordmark:hover {
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  color: var(--colour-text-muted);
+}
+
+/* What the lines are, said once, under the three rows it is said about. The
+   drawing is a reading and a reader is owed its units. */
+.readings-key {
+  max-width: var(--measure);
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-m);
   color: var(--colour-text-muted);
 }
 
@@ -1802,33 +1857,7 @@ a.wordmark:hover {
   font-size: var(--text-s);
 }
 
-/* The colophon and the theme control on one line, wrapping to two when
-   there is no room, because neither is worth truncating. */
-.foot-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-5);
-}
-
 .colophon {
   margin: 0;
   letter-spacing: 0.04em;
-}
-
-/* The same shape as the console's chrome control (`.lens-control`): a word
-   and a select, so the two surfaces offer the same three states in the same
-   form. It is `hidden` in the markup and unhidden by `theme.js`, because a
-   control that cannot act is worse than no control, and without script the
-   page still resolves to a complete theme from the bare `:root` block. */
-.theme-control {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  white-space: nowrap;
-}
-
-.theme-control select {
-  font: inherit;
 }
