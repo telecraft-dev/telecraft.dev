@@ -31,6 +31,11 @@
  * Arrivals come at intervals and heights that do not repeat, so the line
  * never settles into a loop a reader can learn.
  *
+ * It starts on the frame the script runs and nothing is staged behind it.
+ * The geometry in the markup is the geometry this starts from, so there is
+ * no changeover to see: the page draws once, and what it drew was already
+ * moving.
+ *
  * Nothing here is fetched, imported or bundled: the site makes no external
  * request, and `tools/check-external-assets.mjs` fails the build if it ever
  * does.
@@ -92,8 +97,14 @@
   var phase = 0
   var last = 0
   var running = false
-  var ready = false
   var onScreen = []
+
+  /* Thirty updates a second. At sixty the line moves under half a viewBox
+     unit between frames, which is about a third of a pixel at the size a
+     panel draws it, so half the work was buying nothing and spending every
+     reader's battery on it. */
+  var TICK = 1000 / 30
+  var due = 0
 
   /* Arrivals far enough apart to be read one at a time, and never twice the
      same distance apart. One gap in five is long, which is what stops the
@@ -162,6 +173,9 @@
 
   function frame(now) {
     if (!running) return
+    requestAnimationFrame(frame)
+    if (now < due) return
+    due = now + TICK
 
     /* A tab that has been in the background comes back to one step, not to
        the whole time it was away. */
@@ -177,14 +191,13 @@
     for (i = 0; i < whole.length; i++) whole[i].setAttribute('points', full)
     var short = geometry(METRICS)
     for (i = 0; i < arrived.length; i++) arrived[i].setAttribute('points', short)
-
-    requestAnimationFrame(frame)
   }
 
   function start() {
-    if (running || !ready) return
+    if (running) return
     running = true
     last = performance.now()
+    due = 0
     requestAnimationFrame(frame)
   }
 
@@ -197,8 +210,7 @@
      once, including the ones below the fold, and a count that took those as
      departures would be short by the number of them for the rest of the
      page's life. */
-  var watching = 'IntersectionObserver' in window
-  if (watching) {
+  if ('IntersectionObserver' in window) {
     var watch = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         var at = onScreen.indexOf(entry.target)
@@ -217,18 +229,6 @@
   } else {
     start()
   }
-
-  /* Nothing runs until the pulse has drawn itself in, over the duration
-     `site.css` authored. Holding the whole page for it means the geometry
-     under that draw is the one the markup holds, and every line on the page
-     comes alive in the same instant, which is what a set of readings taken
-     off one estate should do. The attribute is what tells `site.css` to drop
-     the stroke dash that performed the draw. */
-  setTimeout(function () {
-    ready = true
-    document.documentElement.dataset.pulseLive = ''
-    if (onScreen.length || !watching) start()
-  }, 2400)
 
   schedule(WIDTH)
   ensure(SPAN + LEAD)

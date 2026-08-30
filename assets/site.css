@@ -312,9 +312,11 @@ a.wordmark:hover {
    about. It sits beside the wordmark now rather than under it, at the size
    a nameplate wants.
 
-   The draw is left at the duration it was authored with. `--motion-fast`
-   and `--motion-base` are transition durations (90ms and 160ms) and a
-   line that draws itself over three seconds is not a transition. */
+   It is drawn the moment the page is, and nothing stages it. A line that
+   draws itself in over a few seconds and then hands over to `pulse.js`
+   reads as the page loading twice, which is worse than the flourish was
+   worth. The geometry in the markup is the geometry the script starts from,
+   so a reader never sees the changeover. */
 
 .pulse {
   display: block;
@@ -328,47 +330,6 @@ a.wordmark:hover {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 320;
-  stroke-dashoffset: 320;
-  animation:
-    draw 2.4s ease-out forwards,
-    hum 6s 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes hum {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.55;
-  }
-}
-
-/* `base.css` already collapses every animation under reduced motion, but
-   collapsing this one is not enough: the line's resting state is undrawn,
-   so it has to be told to finish rather than told to stop. */
-@media (prefers-reduced-motion: reduce) {
-  .pulse polyline {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-}
-
-/* `pulse.js` sets this the moment the draw above has finished, and from then
-   on the geometry is redrawn every frame instead. Both of the draw's own
-   properties have to go with the animation: an offset of nothing would still
-   leave a 320 unit dash on a line whose length now changes with every beat,
-   and the tail of it would show as a gap. */
-:root[data-pulse-live] .pulse polyline {
-  animation: none;
-  stroke-dasharray: none;
-  stroke-dashoffset: 0;
 }
 
 /* ---- The words in the hero ---- */
