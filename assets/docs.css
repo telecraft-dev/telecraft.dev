@@ -150,33 +150,90 @@ body {
   font-size: var(--text-s);
 }
 
-/* The same shape as the console's chrome control (`.lens-control`) and the
-   front door's, so all three surfaces offer the same three states in the
-   same form. It is `hidden` in the markup and unhidden by `theme.js`,
-   because a control that cannot act is worse than no control, and without
-   script the page still resolves to a complete theme from the bare `:root`
-   block in `tokens.css`. */
+/* Three drawn marks on one plate, which is the shape a bar can hold at any
+   width the word could not. It is a radio group because there are three
+   states and following the machine is one of them, and it is `hidden` in the
+   markup and unhidden by `theme.js`, because a control that cannot act is
+   worse than no control and the page resolves to a complete theme from the
+   bare `:root` block without it.
+
+   `fieldset` and `legend` bring a border, a padding and a float with them.
+   All of it goes: what the elements are wanted for is the grouping and the
+   name they give it. */
 .theme-control {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-s);
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+/* Off the screen, not out of the document: it is the group's name. */
+.theme-control legend,
+.theme-option > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-.theme-control select {
-  font: inherit;
+.theme-option {
+  position: relative;
+  display: flex;
+  cursor: pointer;
 }
 
-/* The narrowest bars have no room for the word, and the select says what it
-   is: the options are the three states spelled out. It is taken off the
-   screen rather than out of the document, because it is the control's
-   accessible name.
+.theme-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 
-   The gaps close with it. This bar does not wrap at any width a phone has,
-   because it is sticky and a second line of chrome is a second line a reader
-   never gets back; it is allowed to as a last resort, because a control run
-   off the edge of the screen is worse than a bar one line taller. */
+/* A plate, not a pill (identity.md): the smallest radius in the scale, and
+   the mark drawn in the same hairline stroke as every other mark on the
+   site. */
+.theme-mark {
+  box-sizing: content-box;
+  width: 16px;
+  height: 16px;
+  padding: 4px;
+  border-radius: var(--radius-1);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--colour-text-faint);
+}
+
+.theme-option:hover .theme-mark {
+  color: var(--colour-text-muted);
+}
+
+/* The chosen one is filled and comes up to full strength, which is how every
+   other settled state on these surfaces reads. */
+.theme-option input:checked + .theme-mark {
+  background: var(--colour-fill);
+  color: var(--colour-chrome);
+}
+
+.theme-option input:focus-visible + .theme-mark {
+  outline: var(--focus-width) solid var(--focus-colour);
+  outline-offset: var(--focus-offset);
+}
+
+/* The gaps close on the narrowest bars. This one does not wrap at any width
+   a phone has, because it is sticky and a second line of chrome is a second
+   line a reader never gets back; it is allowed to as a last resort, because
+   a control run off the edge of the screen is worse than a bar one line
+   taller. */
 @media (max-width: 34rem) {
   .topbar {
     flex-wrap: wrap;
@@ -192,16 +249,6 @@ body {
      does not wrap, so the bar reads as one group either way. */
   .theme-control {
     margin-inline-start: auto;
-  }
-
-  .theme-control > span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 

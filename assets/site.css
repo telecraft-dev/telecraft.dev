@@ -158,51 +158,83 @@ body {
   font-size: var(--text-m);
 }
 
-/* The same shape as the console's chrome control (`.lens-control`), so the
-   two surfaces offer the same three states in the same form. It is `hidden`
-   in the markup and unhidden by `theme.js`, because a control that cannot
-   act is worse than no control, and without script the page still resolves
-   to a complete theme from the bare `:root` block. */
+/* Three drawn marks on one plate, which is the shape a bar can hold at any
+   width the word could not. It is a radio group because there are three
+   states and following the machine is one of them, and it is `hidden` in the
+   markup and unhidden by `theme.js`, because a control that cannot act is
+   worse than no control and the page resolves to a complete theme from the
+   bare `:root` block without it.
+
+   `fieldset` and `legend` bring a border, a padding and a float with them.
+   All of it goes: what the elements are wanted for is the grouping and the
+   name they give it. */
 .theme-control {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-m);
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+/* Off the screen, not out of the document: it is the group's name. */
+.theme-control legend,
+.theme-option > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-.theme-control select {
-  font: inherit;
+.theme-option {
+  position: relative;
+  display: flex;
+  cursor: pointer;
 }
 
-/* The narrowest bars have no room for the word, and the select says what it
-   is: the options are the three states spelled out. It is taken off the
-   screen rather than out of the document, because it is the control's
-   accessible name. */
-@media (max-width: 34rem) {
-  .theme-control > span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
+.theme-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
-/* Atkinson draws long descenders, and `base.css` says a surface that wants
-   its rule further from them sets the offset itself. */
-.topnav a,
-.band-body a,
-.foot a {
-  text-underline-offset: 0.2em;
+/* A plate, not a pill (identity.md): the smallest radius in the scale, and
+   the mark drawn in the same hairline stroke as every other mark on the
+   site. */
+.theme-mark {
+  box-sizing: content-box;
+  width: 16px;
+  height: 16px;
+  padding: 4px;
+  border-radius: var(--radius-1);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--colour-text-faint);
 }
 
-.topnav a:hover,
-.band-body a:hover,
-.foot a:hover {
-  text-decoration-thickness: 2px;
+.theme-option:hover .theme-mark {
+  color: var(--colour-text-muted);
+}
+
+/* The chosen one is filled and comes up to full strength, which is how every
+   other settled state on these surfaces reads. */
+.theme-option input:checked + .theme-mark {
+  background: var(--colour-fill);
+  color: var(--colour-chrome);
+}
+
+.theme-option input:focus-visible + .theme-mark {
+  outline: var(--focus-width) solid var(--focus-colour);
+  outline-offset: var(--focus-offset);
 }
 
 /* ---- The wordmark ----

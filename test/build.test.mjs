@@ -160,15 +160,27 @@ describe('the landing page and a documentation page are the same site', () => {
   });
 
   // Hidden until `theme.js` unhides it: a control that cannot act is worse
-  // than no control. The id is what `theme.js` finds it by, and the class is
-  // what it unhides, so both are part of the contract.
+  // than no control. The class is what it unhides and the input name is what
+  // it finds the states by, so both are part of the contract. Three of them,
+  // because following the machine is a state and a toggle cannot say it.
   it('offers the same three theme states in the same form', () => {
     const html = page();
-    assert.match(html, /<label class="theme-control" hidden>/);
-    assert.match(html, /<select id="theme-choice">/);
+    assert.match(html, /<fieldset class="theme-control" hidden>/);
     for (const state of ['system', 'light', 'dark']) {
-      assert.match(html, new RegExp(`<option value="${state}">`));
+      assert.match(html, new RegExp(`<input type="radio" name="theme" value="${state}">`));
     }
+    // Each mark carries its own name, for anybody the drawing does not reach.
+    for (const name of ['System', 'Light', 'Dark']) {
+      assert.match(html, new RegExp(`<span>${name}</span>`));
+    }
+  });
+
+  // The bar, not the foot. The one control that changes how the rest of the
+  // page looks is no use below the rest of the page.
+  it('carries the theme control in the topbar', () => {
+    const html = page();
+    const bar = html.slice(html.indexOf('<header class="topbar">'), html.indexOf('</header>'));
+    assert.match(bar, /<fieldset class="theme-control" hidden>/);
   });
 
   // telecraft ADR-0050 §6. Apache-2.0 was never granted and saying so was a

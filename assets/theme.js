@@ -2,8 +2,9 @@
  * The theme, after the first paint (ADR-0047 §2).
  *
  * Three states, not two: `system`, `light` and `dark`. Following the machine
- * is the honest default and an on/off switch cannot express it, so the stored
- * value is the *choice* and `data-theme` on the root element is the
+ * is the honest default and an on/off switch cannot express it, so the
+ * control is a radio group of three drawn marks rather than a toggle, the
+ * stored value is the *choice*, and `data-theme` on the root element is the
  * *resolution* of it. `tokens.css` defines every colour in exactly two blocks
  * (the bare `:root` carrying dark, and `:root[data-theme='light']`), so a
  * browser that never runs this file still renders a complete theme rather
@@ -50,16 +51,21 @@
       choice === 'system' ? (query && query.matches ? 'light' : 'dark') : choice
   }
 
-  var control = document.getElementById('theme-choice')
+  var options = document.querySelectorAll('.theme-control input[name="theme"]')
   var choice = loadChoice()
   apply(choice)
 
-  if (control) {
-    control.value = choice
-    control.closest('.theme-control').hidden = false
-    control.addEventListener('change', function () {
-      saveChoice(control.value)
-      apply(control.value)
+  if (options.length) {
+    options[0].closest('.theme-control').hidden = false
+    Array.prototype.forEach.call(options, function (option) {
+      // Whichever the stored choice is, and nothing checked if it is a value
+      // this build does not offer, which is a state the group survives.
+      option.checked = option.value === choice
+      option.addEventListener('change', function () {
+        if (!option.checked) return
+        saveChoice(option.value)
+        apply(option.value)
+      })
     })
   }
 
