@@ -116,7 +116,13 @@
            Severity colour is deliberately absent, here and everywhere on this
            site (ADR-0047 §5, and the note at the top of `site.css`). The
            outcome is read off a drawn mark and its word, which is the rule the
-           console holds itself to and the reason a card survives greyscale. -->
+           console holds itself to and the reason a card survives greyscale.
+
+           The three traces are the verdict drawn rather than a decoration.
+           Observed is missing the second arrival the other two have, because
+           that arrival is the metrics this Service composed, reports running,
+           and never delivered. Change the words and the geometry has to
+           change with them. -->
       <figure class="panel panel-hero">
         <figcaption class="panel-head">
           <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="8" r="1.6" fill="currentColor" stroke="none"/><path d="M8 4.2a5 5 0 0 1 0 7.6"/><path d="M11 2.6a8 8 0 0 1 0 10.8"/></svg>
@@ -146,7 +152,7 @@
               <p class="reading-name">Observed</p>
               <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
                 <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
-                <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+                <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 240,12"/>
               </svg>
               <p class="reading-value">traces, logs</p>
             </li>
@@ -338,12 +344,15 @@ satisfies:
             <p>Telecraft reads the estate three ways. Each reading has one definition and one
             source; they compose, and they are never blended.</p>
 
-            <!-- One geometry, three strokes. The line is the same pulse the
-                 hero draws, rendered three times, because these are three
-                 readings of one estate rather than three different things.
-                 Pattern carries the difference and each row states its own
-                 name beside it, so nothing here is read off a hue
-                 (ADR-0047 §5). -->
+            <!-- A peak is telemetry arriving and the datum is the window
+                 with nothing on it, which is why the rows are stacked in
+                 register: a reading is read against the one below it. Two of
+                 these three draw every arrival and Observed is flat where the
+                 metrics should be, which is the estate the hero panel prints
+                 a verdict on. Absence and the stroke carry it, and each row
+                 states its own name, so nothing here is read off a hue
+                 (ADR-0047 §5). `assets/pulse.js` runs the same two streams
+                 without changing what either one says. -->
             <ul class="readings readings-explained">
               <li class="reading">
                 <p class="reading-name">Intended</p>
@@ -368,12 +377,16 @@ satisfies:
                 <p class="reading-name">Observed</p>
                 <svg class="trace trace-observed" viewBox="0 0 240 24" aria-hidden="true">
                   <line class="trace-datum" x1="0" y1="12" x2="240" y2="12"/>
-                  <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+                  <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 240,12"/>
                 </svg>
                 <p class="reading-source">The telemetry that landed in your backend over a
                 window, judged against the window each Requirement asked for.</p>
               </li>
             </ul>
+
+            <p class="readings-key">Every peak is telemetry arriving and the flat line is the
+            window with nothing on it. Where Intended and Effective have an arrival and
+            Observed does not, nothing reached the backend.</p>
 
             <h3>Both of these Services report zero metrics</h3>
             <p>They are not the same problem, and they do not go to the same team. A

@@ -653,6 +653,15 @@ a.wordmark:hover {
   color: var(--colour-text-muted);
 }
 
+/* What the lines are, said once, under the three rows it is said about. The
+   drawing is a reading and a reader is owed its units. */
+.readings-key {
+  max-width: var(--measure);
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-m);
+  color: var(--colour-text-muted);
+}
+
 .trace {
   display: block;
   width: 100%;

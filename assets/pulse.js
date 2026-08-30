@@ -9,16 +9,27 @@
  * control and the panels follow: everything works first, and script only
  * makes it move.
  *
- * One geometry, seven strokes, which is what the markup already draws and
- * what this keeps. Every line takes the same points string on every frame,
- * because six of them are readings of one estate and the seventh is the
- * motif they are drawn from. The strokes are what tell the readings apart:
- * Intended is continuous, Effective is segmented, Observed is sampled. That
- * distinction is in `site.css` and nothing here touches it.
+ * A peak is telemetry arriving. The datum between peaks is the window with
+ * nothing on it, which is why the datum is drawn under every line and why
+ * the lines are stacked in register: a reading is what it is against the
+ * line below it.
  *
- * Beats arrive at intervals that do not repeat, so the line never settles
- * into a loop a reader can learn. Between them the datum is flat, because a
- * quiet estate is quiet.
+ * So there are two streams here, not one. Arrivals rotate through the three
+ * signals, and both panels on this page are the same estate the markup
+ * already writes down in words: metrics are composed, the collector reports
+ * them running, and none of them reach the backend. Intended and Effective
+ * draw every arrival. Observed draws every arrival but the metrics, and sits
+ * on the datum where each of those should have been. That hole is the
+ * verdict the panel prints underneath it, and a reader who compares the rows
+ * finds it without being told which line to look at.
+ *
+ * Nothing is read off a hue and nothing is read off the stroke: the stroke
+ * still says only how a reading is taken, which is Intended continuous,
+ * Effective segmented, Observed sampled, and that is `site.css` rather than
+ * anything here.
+ *
+ * Arrivals come at intervals and heights that do not repeat, so the line
+ * never settles into a loop a reader can learn.
  *
  * Nothing here is fetched, imported or bundled: the site makes no external
  * request, and `tools/check-external-assets.mjs` fails the build if it ever
@@ -30,8 +41,14 @@
      who has asked for less motion keeps it. */
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  var lines = document.querySelectorAll('.pulse polyline, .trace polyline')
-  if (!lines.length) return
+  /* Everything that draws the estate whole, and everything that draws what
+     reached the backend. The nameplate keeps the whole reading: it is the
+     motif, not a measurement of anything. */
+  var whole = document.querySelectorAll(
+    '.pulse polyline, .trace-intended polyline, .trace-effective polyline'
+  )
+  var arrived = document.querySelectorAll('.trace-observed polyline')
+  if (!whole.length && !arrived.length) return
 
   /* All seven share the viewBox the markup already draws in. */
   var DATUM = 12
@@ -58,11 +75,18 @@
   ]
   var WIDTH = 40
 
-  /* The two beats the markup already draws, so the first frame is the
-     picture that was on screen a moment before it. */
+  /* Arrivals rotate through the signals in the order the panels list them,
+     and every third one is the metrics that never arrive. */
+  var METRICS = 2
+  var turn = 0
+
+  /* The two arrivals the markup already draws, so the first frame is the
+     picture that was on screen a moment before it. The second of them is a
+     metrics arrival, which is why the authored Observed line is already flat
+     where the other two peak. */
   var beats = [
-    { at: 68, amp: 1, span: WIDTH },
-    { at: 178, amp: 0.85, span: WIDTH }
+    { at: 68, amp: 1, span: WIDTH, signal: 1 },
+    { at: 178, amp: 0.85, span: WIDTH, signal: METRICS }
   ]
   var next = 178
   var phase = 0
@@ -71,32 +95,34 @@
   var ready = false
   var onScreen = []
 
-  /* Beats far enough apart to be read one at a time, and never twice the
+  /* Arrivals far enough apart to be read one at a time, and never twice the
      same distance apart. One gap in five is long, which is what stops the
      rhythm sounding like a metronome, and none of them is long enough to
-     empty the line: the widest spacing a beat can leave behind it is still
-     narrower than the view, so there is always something to watch. */
+     empty the line: the widest spacing an arrival can leave behind it is
+     still narrower than the view, so there is always something to watch. */
   function schedule(span) {
     var gap = 20 + Math.random() * 70
     if (Math.random() < 0.2) gap += 50
     next += span + gap
   }
 
-  /* Height and length both vary, because two beats measured off one estate
-     are never the same size either. */
+  /* Height and length both vary, because two arrivals measured off one
+     estate are never the same size either. */
   function ensure(upto) {
     while (next < upto) {
+      turn = (turn + 1) % 3
       var beat = {
         at: next,
         amp: 0.55 + Math.random() * 0.6,
-        span: WIDTH * (0.85 + Math.random() * 0.35)
+        span: WIDTH * (0.85 + Math.random() * 0.35),
+        signal: turn
       }
       beats.push(beat)
       schedule(beat.span)
     }
   }
 
-  /* Anything wholly behind the left edge is never drawn again. */
+  /* Any arrival wholly behind the left edge is never drawn again. */
   function prune() {
     var edge = phase - LEAD
     var keep = 0
@@ -108,13 +134,16 @@
     return Math.round(n * 10) / 10
   }
 
-  function geometry() {
+  /* `drop` is the signal this stream never receives. Passing nothing draws
+     the estate whole. */
+  function geometry(drop) {
     var points = []
     var first = null
 
     for (var b = 0; b < beats.length; b++) {
       var at = beats[b].at - phase
       if (at > SPAN + LEAD) break
+      if (beats[b].signal === drop) continue
       var amp = beats[b].amp
       var scale = beats[b].span / WIDTH
       for (var n = 0; n < BEAT.length; n++) {
@@ -143,8 +172,11 @@
     prune()
     ensure(phase + SPAN + LEAD)
 
-    var points = geometry()
-    for (var i = 0; i < lines.length; i++) lines[i].setAttribute('points', points)
+    var i
+    var full = geometry(null)
+    for (i = 0; i < whole.length; i++) whole[i].setAttribute('points', full)
+    var short = geometry(METRICS)
+    for (i = 0; i < arrived.length; i++) arrived[i].setAttribute('points', short)
 
     requestAnimationFrame(frame)
   }
