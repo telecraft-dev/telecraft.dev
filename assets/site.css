@@ -360,6 +360,17 @@ a.wordmark:hover {
   }
 }
 
+/* `pulse.js` sets this the moment the draw above has finished, and from then
+   on the geometry is redrawn every frame instead. Both of the draw's own
+   properties have to go with the animation: an offset of nothing would still
+   leave a 320 unit dash on a line whose length now changes with every beat,
+   and the tail of it would show as a gap. */
+:root[data-pulse-live] .pulse polyline {
+  animation: none;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
 /* ---- The words in the hero ---- */
 
 .lede {
