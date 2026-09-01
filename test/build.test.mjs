@@ -140,12 +140,24 @@ describe('the landing page and a documentation page are the same site', () => {
 
   it('loads faces, then values, then elements, then structure', () => {
     const sheets = [...page().matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]);
-    assert.deepEqual(sheets, [
-      '/assets/fonts/fonts.css',
-      '/assets/tokens.css',
-      '/assets/base.css',
-      '/assets/docs.css',
-    ]);
+    assert.deepEqual(
+      sheets.map((href) => href.split('?')[0]),
+      ['/assets/fonts/fonts.css', '/assets/tokens.css', '/assets/base.css', '/assets/docs.css'],
+    );
+  });
+
+  // Pages serves a page for ten minutes and an asset for four hours, so a
+  // page can outrun the stylesheet it was written against. Naming each one by
+  // what is in it is what stops that, and it only works if every one of them
+  // is named.
+  it('stamps every stylesheet and script with its contents', () => {
+    const html = page();
+    const urls = [...html.matchAll(/(?:href|src)="(\/assets\/[^"]+\.(?:css|js))(\?v=([a-f0-9]+))?"/g)];
+    assert.ok(urls.length >= 4, 'the page asks for no stylesheets or scripts');
+    for (const [, url, , stamp] of urls) {
+      assert.ok(stamp, `${url} is served without a stamp, so a cache can answer for it`);
+      assert.equal(stamp.length, 12);
+    }
   });
 
   it('carries the mark, the font preload, and the theme script', () => {
@@ -156,7 +168,7 @@ describe('the landing page and a documentation page are the same site', () => {
       html,
       /<link rel="preload" href="\/assets\/fonts\/AtkinsonHyperlegibleNext\.woff2" as="font" type="font\/woff2" crossorigin>/,
     );
-    assert.match(html, /<script src="\/assets\/theme\.js" defer><\/script>/);
+    assert.match(html, /<script src="\/assets\/theme\.js\?v=[a-f0-9]{12}" defer><\/script>/);
   });
 
   // Hidden until `theme.js` unhides it: a control that cannot act is worse
