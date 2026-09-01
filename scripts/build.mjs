@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { buildModel, isNotPublished, outputPathFor } from './lib/nav.mjs';
 import { createRenderer } from './lib/markdown.mjs';
 import { renderPage, escapeHtml } from './lib/layout.mjs';
+import { createHash } from 'node:crypto';
 import { findExternalReferences, formatViolation } from '../tools/check-external-assets.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -221,7 +222,56 @@ function* walk(dir, prefix = '') {
   }
 }
 
+/**
+ * Every stylesheet and script carries a stamp of its own contents.
+ *
+ * Pages serves a page with `max-age=600` and everything under `/assets/` with
+ * `max-age=14400`. A page therefore comes back new while the stylesheet it was
+ * written against is still four hours old, and for those four hours a reader
+ * holds markup that its rules have never seen. That is not a worry, it is what
+ * happened: a topbar shipped drawn by a sheet that did not know what was in
+ * it.
+ *
+ * Naming a file by what is in it settles it. Change the file and the URL
+ * changes with it, so no cache can already hold an answer for it; change
+ * nothing and the stamp is the same, so a reader keeps the copy they have.
+ * The stamp is a query rather than a new filename because the file on disk
+ * stays the one the repository names, which is what every other check here
+ * looks for.
+ *
+ * Faces are left alone. They are asked for from inside `fonts.css` rather than
+ * from a page, they are vendored at a version, and a face that arrives one
+ * deploy late is a face nobody sees arrive.
+ */
+function stampAssets(outDir) {
+  const assets = path.join(outDir, 'assets');
+  if (!fs.existsSync(assets)) return;
+
+  const stamps = new Map();
+  for (const relative of walk(assets)) {
+    if (!/\.(?:css|js)$/.test(relative)) continue;
+    const body = fs.readFileSync(path.join(assets, relative));
+    stamps.set(`/assets/${relative}`, createHash('sha256').update(body).digest('hex').slice(0, 12));
+  }
+  if (stamps.size === 0) return;
+
+  const reference = /(href|src)="(\/assets\/[^"?#]+\.(?:css|js))"/g;
+  for (const relative of walk(outDir)) {
+    if (!relative.endsWith('.html')) continue;
+    const file = path.join(outDir, relative);
+    const before = fs.readFileSync(file, 'utf8');
+    const after = before.replace(reference, (whole, attribute, url) => {
+      const stamp = stamps.get(url);
+      return stamp ? `${attribute}="${url}?v=${stamp}"` : whole;
+    });
+    if (after !== before) fs.writeFileSync(file, after);
+  }
+}
+
 async function finish(options, warnings, pageCount) {
+  // Before the check below, because what it reads has to be what deploys.
+  stampAssets(options.out);
+
   // The same check CI runs over the source tree, run here over what will
   // actually be deployed. This is the pass that matters: most of `_site/` was
   // written in another repository and arrives through `nav.yaml`, so the
