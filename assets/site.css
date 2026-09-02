@@ -165,6 +165,15 @@ body {
    worse than no control and the page resolves to a complete theme from the
    bare `:root` block without it.
 
+   The console offers the same three states in a different shape, and that is
+   settled rather than drifted. `console/src/chrome/ThemeControl.tsx` records
+   why: a three segment control in its chrome was measured and did not fit,
+   and the chrome compaction then moved the theme into the profile menu,
+   beside the reader's name, because it is a preference about the reader
+   rather than about what the numbers mean. Neither of those pressures exists
+   on a page whose bar holds two links and no menu. Do not make one follow the
+   other; both were measured where they sit.
+
    `fieldset` and `legend` bring a border, a padding and a float with them.
    All of it goes: what the elements are wanted for is the grouping and the
    name they give it. */

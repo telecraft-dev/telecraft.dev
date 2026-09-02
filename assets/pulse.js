@@ -46,7 +46,18 @@
 
 ;(function () {
   /* The authored geometry is the resting state, and it is correct. Anybody
-     who has asked for less motion keeps it. */
+     who has asked for less motion keeps it.
+
+     This is the whole of the answer to the movement, and it is a deliberate
+     answer rather than an omission. A reader who wants it stopped stops it
+     once, at their machine, for every site they open, and every line here
+     honours that before it draws a frame. A button in the bar would be a
+     second control for the same preference, offered on one site, that a
+     reader has to find; the console has already measured what a bar costs
+     when a control is added to it for something the reader has settled
+     elsewhere. If a reason to put one on the page ever arrives, it belongs
+     beside the theme, in the same shape, and it stops this loop by clearing
+     `running`. */
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   /* Everything that draws the estate whole, and everything that draws what
