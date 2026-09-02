@@ -54,12 +54,12 @@ jobs:
           printf 'the build itself always reads telecraft main.\n'
 
       - name: Check out telecraft.dev
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The documentation source. Always main, never a ref from the
       # dispatch payload. Only docs/ is fetched.
       - name: Check out the documentation from telecraft-dev/telecraft
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: telecraft-dev/telecraft
           ref: main
@@ -101,7 +101,7 @@ jobs:
       - name: Nothing the built site fetches comes from another origin
         run: npm run check:external
 
-      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       # What `actions/upload-pages-artifact` does, done here instead. That
       # action is pinned to a commit like every other action in this

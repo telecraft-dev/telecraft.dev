@@ -40,7 +40,7 @@ jobs:
     steps:
       # Nothing here pushes, so the checkout does not keep the token on disk
       # for the branch's own install scripts to read.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -54,7 +54,7 @@ jobs:
       # different documentation tree than the one production builds from is a
       # preview of a site nobody is going to get.
       - name: Check out the documentation from telecraft-dev/telecraft
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: telecraft-dev/telecraft
           ref: main
