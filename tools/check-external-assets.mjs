@@ -31,9 +31,21 @@
 // OTLP endpoint in a YAML listing, a release archive in a table) and every
 // one of them is prose that happens to be shaped like an address.
 //
-// XML namespace identifiers are the one exception: `xmlns` is a name, not an
+// XML namespace identifiers are an exception: `xmlns` is a name, not an
 // address, and no parser has ever dereferenced one. An SVG cannot be authored
 // without it.
+//
+// The site's own origin is the other. The rule is about another origin, and a
+// search engine or a link preview needs this one written out in full: a
+// canonical URL, an Open Graph image and a sitemap entry are only valid as
+// absolute addresses. `https://telecraft.dev/` and nothing else qualifies, so
+// `demo.telecraft.dev` and `telecraft.dev.example` are still failures.
+//
+// A `<script type="application/ld+json">` body is read as text. It is a data
+// block: a browser never executes it and never fetches from it, and the
+// structured data a search engine reads from it is a list of addresses
+// written down (the repository, the licence), which is what text is. The tag
+// itself is still checked like any other.
 //
 // Two things get checked, and they are not the same thing. The source tree,
 // on every pull request, because that is where a mistake is cheap to fix; and
@@ -76,6 +88,8 @@ const SKIP = new Set([
 ])
 
 const NAMESPACES = [/^https?:\/\/www\.w3\.org\//]
+const OWN_ORIGIN = /^https:\/\/telecraft\.dev(?:[/?#]|$)/
+const DATA_BLOCK = /\btype\s*=\s*(?:"application\/ld\+json"|'application\/ld\+json')/i
 const URL_PATTERN = /(?:https?:)?\/\/[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?![a-z0-9.-])[^\s"'`)<>\\]*/gi
 
 // `<a href>` and `<area href>`, the two attributes that name somewhere the
@@ -147,9 +161,10 @@ function fetchableRegions(html) {
 
     const name = (html.slice(open + 1, end).match(/^[a-zA-Z][a-zA-Z0-9-]*/) ?? [''])[0].toLowerCase()
     if (EXECUTABLE.has(name)) {
+      const dataBlock = name === 'script' && DATA_BLOCK.test(html.slice(open, end))
       const close = html.toLowerCase().indexOf(`</${name}`, end)
       const bodyEnd = close === -1 ? html.length : close
-      if (bodyEnd > end) regions.push([end, bodyEnd])
+      if (bodyEnd > end && !dataBlock) regions.push([end, bodyEnd])
       i = bodyEnd
     }
   }
@@ -205,6 +220,7 @@ export async function findExternalReferences(root) {
       const url = match[0]
       if (regions && !within(regions, match.index)) continue
       if (NAMESPACES.some((pattern) => pattern.test(url))) continue
+      if (OWN_ORIGIN.test(url)) continue
       if (allowed.get(url) > 0) {
         allowed.set(url, allowed.get(url) - 1)
         continue

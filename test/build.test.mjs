@@ -75,6 +75,12 @@ describe('what gets emitted', () => {
       'icon-512.png',
       'apple-touch-icon.png',
       'LICENSE',
+      'robots.txt',
+      'sitemap.xml',
+      '404.html',
+      'og-image.png',
+      'google7049fba5ad0480df.html',
+      'BingSiteAuth.xml',
       'assets/site.css',
       'assets/docs.css',
       'assets/theme.js',
@@ -391,6 +397,139 @@ describe('no external requests', () => {
       false,
     );
     fs.rmSync(planted, { recursive: true, force: true });
+  });
+
+  // The site's own origin is not another origin, and a look-alike is.
+  it('allows the site\'s own origin and nothing that only resembles it', async () => {
+    const planted = fs.mkdtempSync(path.join(os.tmpdir(), 'telecraft-check-'));
+    fs.writeFileSync(
+      path.join(planted, 'page.html'),
+      `<link rel="canonical" href="https://telecraft.dev/docs/">
+       <meta property="og:image" content="https://telecraft.dev/og-image.png">
+       <img src="https://demo.telecraft.dev/a.png">
+       <img src="https://telecraft.dev.example.invalid/a.png">
+       <img src="//telecraft.dev/a.png">`,
+    );
+    const { violations } = await findExternalReferences(planted);
+    assert.deepEqual(
+      violations.map((violation) => violation.url),
+      ['https://demo.telecraft.dev/a.png', 'https://telecraft.dev.example.invalid/a.png', '//telecraft.dev/a.png'],
+    );
+    fs.rmSync(planted, { recursive: true, force: true });
+  });
+
+  // Structured data is read, never run. An ordinary script is still checked.
+  it('reads a structured data block as text and still checks every other script', async () => {
+    const planted = fs.mkdtempSync(path.join(os.tmpdir(), 'telecraft-check-'));
+    fs.writeFileSync(
+      path.join(planted, 'page.html'),
+      `<script type="application/ld+json">{"sameAs": ["https://github.example.invalid/org"]}</script>
+       <script>fetch('https://cdn.example.invalid/x.json')</script>
+       <script type="application/ld+json" src="https://cdn.example.invalid/data.json"></script>`,
+    );
+    const { violations } = await findExternalReferences(planted);
+    assert.deepEqual(
+      violations.map((violation) => violation.url),
+      ['https://cdn.example.invalid/x.json', 'https://cdn.example.invalid/data.json'],
+    );
+    fs.rmSync(planted, { recursive: true, force: true });
+  });
+});
+
+// What a search engine and a link preview read. Each of these is a thing that
+// fails silently: a sitemap that names a page nobody publishes, a canonical
+// URL that points at a sibling, a verification file one byte off. Nothing on
+// screen changes, and the search console says so a week later.
+describe('search engines and link previews', () => {
+  const origin = 'https://telecraft.dev';
+  const canonical = (html) => /<link rel="canonical" href="([^"]+)">/.exec(html)?.[1];
+
+  it('serves both verification files byte for byte', () => {
+    for (const name of ['google7049fba5ad0480df.html', 'BingSiteAuth.xml']) {
+      assert.deepEqual(
+        fs.readFileSync(path.join(outDir, name)),
+        fs.readFileSync(path.join(repoRoot, name)),
+        `${name} changed on its way to the output`,
+      );
+    }
+  });
+
+  it('names the sitemap in robots.txt and blocks nothing', () => {
+    const robots = read('robots.txt');
+    assert.match(robots, new RegExp(`^Sitemap: ${origin}/sitemap\\.xml$`, 'm'));
+    assert.doesNotMatch(robots, /^Disallow: \/\s*$/m);
+  });
+
+  it('lists every published page in the sitemap, by its canonical address', () => {
+    const sitemap = read('sitemap.xml');
+    const listed = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+    assert.equal(listed[0], `${origin}/`);
+    assert.ok(listed.includes(`${origin}/docs/`));
+    assert.ok(listed.includes(`${origin}/docs/concepts/shapes.html`));
+    assert.ok(listed.includes(`${origin}/docs/guides/`));
+    assert.ok(listed.includes(`${origin}/docs/standalone.html`));
+    assert.equal(new Set(listed).size, listed.length, 'the sitemap names a page twice');
+    for (const url of listed) {
+      const output = url.slice(origin.length + 1);
+      const file = output === '' || output.endsWith('/') ? `${output}index.html` : output;
+      assert.ok(exists(file), `${url} is in the sitemap but not in the output`);
+      assert.doesNotMatch(url, /\/(adr|secret)\b|404\.html|google|BingSiteAuth/);
+    }
+  });
+
+  it('gives every generated page a canonical address that is its own', () => {
+    assert.equal(canonical(fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8')), `${origin}/`);
+    assert.equal(canonical(read('docs/index.html')), `${origin}/docs/`);
+    assert.equal(canonical(read('docs/guides/index.html')), `${origin}/docs/guides/`);
+    assert.equal(canonical(read('docs/concepts/shapes.html')), `${origin}/docs/concepts/shapes.html`);
+  });
+
+  it('describes each page to a link preview, with a card that is served', () => {
+    for (const html of [read('index.html'), read('docs/concepts/shapes.html')]) {
+      const image = /<meta property="og:image" content="([^"]+)">/.exec(html)?.[1];
+      assert.ok(image?.startsWith(`${origin}/`), `og:image is ${image}`);
+      assert.ok(exists(image.slice(origin.length + 1)), `${image} is not in the output`);
+      assert.match(html, /<meta property="og:title" content="[^"]+">/);
+      assert.match(html, /<meta property="og:url" content="https:\/\/telecraft\.dev\/[^"]*">/);
+      assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+    }
+  });
+
+  it('states the trail to a page as structured data', () => {
+    const html = read('docs/concepts/shapes.html');
+    const block = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)?.[1];
+    assert.ok(block, 'no structured data on a section page');
+    const trail = JSON.parse(block).itemListElement.map((item) => [item.name, item.item]);
+    assert.deepEqual(trail, [
+      ['Documentation', `${origin}/docs/`],
+      ['Concepts', `${origin}/docs/concepts/`],
+      ['Shapes', `${origin}/docs/concepts/shapes.html`],
+    ]);
+  });
+
+  it('gives the landing page structured data that parses', () => {
+    const html = fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8');
+    const block = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)?.[1];
+    const types = JSON.parse(block)['@graph'].map((node) => node['@type']);
+    assert.deepEqual(types, ['WebSite', 'Organization', 'SoftwareApplication']);
+  });
+});
+
+// Pages serves `404.html` for any address the site does not have, at whatever
+// depth that address was, so a relative link on it points somewhere different
+// every time.
+describe('the not-found page', () => {
+  it('is not indexed and links only by root-relative or absolute addresses', () => {
+    const html = read('404.html');
+    assert.match(html, /<meta name="robots" content="noindex">/);
+    for (const match of html.matchAll(/\s(?:href|src)="([^"]+)"/g)) {
+      assert.match(match[1], /^(\/|https:\/\/|#)/, `${match[1]} is relative`);
+    }
+  });
+
+  it('carries the same pre-paint theme resolver as the landing page', () => {
+    const resolver = (html) => html.match(/<script>\n([\s\S]*?)\n<\/script>/)?.[1];
+    assert.equal(resolver(read('404.html')), resolver(fs.readFileSync(path.join(repoRoot, 'index.html'), 'utf8')));
   });
 });
 

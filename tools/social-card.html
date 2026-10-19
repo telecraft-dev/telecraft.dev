@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Telecraft social card</title>
+<!-- The source of `og-image.png`, the card a link preview shows. It is drawn
+     from the site's own faces, tokens and sheet, so it cannot disagree with
+     the landing page about a colour or a face. It is never published.
+
+     To redraw it, at exactly 1200 by 630:
+
+       npm run build
+       cp tools/social-card.html _site/
+       npm run serve
+       open http://localhost:4321/social-card.html in a 1200 by 630 viewport,
+       screenshot the viewport to og-image.png, and delete
+       _site/social-card.html.
+
+     Dark, because the bare :root in `tokens.css` is dark and a preview has
+     no reader preference to follow. -->
+<link rel="stylesheet" href="/assets/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  html,
+  body {
+    width: 1200px;
+    height: 630px;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .card {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 1200px;
+    height: 630px;
+    padding: 0 96px 40px;
+    border-bottom: 0;
+  }
+
+  /* Above the blueprint sheet, as `.hero-inner` is on the landing page. */
+  .card-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .card .wordmark-plate {
+    font-size: 30px;
+  }
+
+  .card .pulse {
+    width: 300px;
+  }
+
+  .card h1 {
+    max-width: none;
+    margin: 0;
+    font-size: 80px;
+    line-height: 1.04;
+  }
+
+  .card .lede {
+    max-width: 52rem;
+    margin: 0;
+    font-size: 30px;
+  }
+
+  .card-address {
+    position: absolute;
+    right: 96px;
+    bottom: 48px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    color: var(--colour-text-faint);
+  }
+</style>
+</head>
+<body>
+<main class="hero card">
+  <div class="card-inner">
+  <p class="hero-plate">
+    <span class="wordmark wordmark-plate"><span class="wordmark-lead">Tele</span>craft</span>
+    <svg class="pulse" viewBox="0 0 240 24" aria-hidden="true">
+      <polyline points="0,12 56,12 68,12 76,4 84,20 92,7 100,17 108,12 168,12 178,12 186,5 194,19 202,12 240,12"/>
+    </svg>
+  </p>
+  <h1><span class="h1-beat">Compose it.</span> <span class="h1-beat">Apply it.</span> <span class="h1-beat">Validate it.</span></h1>
+  <p class="lede">How a platform team runs OpenTelemetry for everyone else.</p>
+  </div>
+  <p class="card-address">telecraft.dev</p>
+</main>
+</body>
+</html>

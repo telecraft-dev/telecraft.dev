@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildModel, isNotPublished, outputPathFor } from './lib/nav.mjs';
 import { createRenderer } from './lib/markdown.mjs';
-import { renderPage, escapeHtml } from './lib/layout.mjs';
+import { renderPage, escapeHtml, canonicalUrl } from './lib/layout.mjs';
 import { createHash } from 'node:crypto';
 import { findExternalReferences, formatViolation } from '../tools/check-external-assets.mjs';
 
@@ -61,6 +61,7 @@ async function main() {
     // The documentation has not landed in telecraft yet, or the checkout
     // failed. Publish the landing page rather than taking the site down.
     warn(`no nav.yaml at ${navPath}; built the landing page only`);
+    writeSitemap(options.out, []);
     await finish(options, warnings, 0);
     return;
   }
@@ -115,6 +116,8 @@ async function main() {
 
   assertNotPublished({ model, options, written });
 
+  writeSitemap(options.out, written.map((entry) => entry.output));
+
   await finish(options, warnings, written.length);
 }
 
@@ -136,6 +139,14 @@ async function main() {
  * all five, and `test/build.test.mjs` checks that every icon the head asks
  * for actually reaches the output, which is the failure this list invites.
  *
+ * The search engines' files are named here too. The two verification files
+ * are the proof of ownership Google Search Console and Bing Webmaster Tools
+ * asked for, served byte for byte at the root; both services check again
+ * later, so removing either one ends the verification. `robots.txt` names
+ * the sitemap the build writes, `404.html` is the page Pages serves for any
+ * address it does not have, and `og-image.png` is the card a link preview
+ * shows, drawn by `tools/social-card.html`.
+ *
  * `CNAME` is optional because the custom domain is presently held in the
  * repository's Pages settings rather than in a file. If one is ever added it
  * has to reach the output, or the first deploy after it drops the domain.
@@ -148,6 +159,11 @@ const SITE_FILES = [
   'icon-512.png',
   'apple-touch-icon.png',
   'LICENSE',
+  'robots.txt',
+  '404.html',
+  'og-image.png',
+  'google7049fba5ad0480df.html',
+  'BingSiteAuth.xml',
   'CNAME',
 ];
 
@@ -167,6 +183,27 @@ function copySiteShell(outDir, warn) {
   } else {
     warn('assets/ is not in this repository; every page will be served unstyled');
   }
+}
+
+/**
+ * Every published page, by the address `canonicalUrl` gives it, so the
+ * sitemap and each page's own canonical link can never disagree. The landing
+ * page is first. No `lastmod`: the documentation is checked out at depth one,
+ * so the build has no honest date to give, and a wrong one is worse than
+ * none to a crawler.
+ */
+function writeSitemap(outDir, outputs) {
+  const entries = ['index.html', ...outputs]
+    .map((output) => `  <url><loc>${escapeHtml(canonicalUrl(output))}</loc></url>`)
+    .join('\n');
+  fs.writeFileSync(
+    path.join(outDir, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</urlset>
+`,
+  );
 }
 
 function sectionIndexBody(section) {
