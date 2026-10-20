@@ -127,6 +127,25 @@ body {
   background: var(--brand);
 }
 
+/* The first thing in the tab order, as it is on every documentation page.
+   Off screen rather than `display: none`, because a hidden element cannot be
+   focused. The rule is `docs.css`'s; keep the two in step. */
+.skip {
+  position: absolute;
+  top: 0;
+  left: -100vw;
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  background: var(--colour-surface-raised);
+  border: 1px solid var(--colour-rule);
+  border-radius: var(--radius-1);
+}
+
+.skip:focus {
+  left: var(--space-2);
+  top: var(--space-2);
+}
+
 /* ---- The chrome ----
    `.topbar`, `a.wordmark`, `nav.topnav` and the theme control are the shape
    the documentation site generates against. Both surfaces are the same site
@@ -271,15 +290,18 @@ a.wordmark:hover {
 }
 /* The mark beside the word. The pack's clear space rule is two reading bands,
    three eighths of the mark's height, on every side; at 1em tall that is 6px
-   and the gap here is 8. Its minimum is 12px tall, which `--text-m` clears. */
+   and the space here is 8. Its minimum is 12px tall, which `--text-m` clears.
+
+   A margin on the mark and not a `gap` on the row: the bare text `craft` is a
+   flex item of its own, so a gap split the one word in two. */
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
 }
 
 .wordmark-mark {
   flex: none;
+  margin-inline-end: var(--space-2);
   /* Taller than the caps beside it, because the mark is measured from its
      datum and the wordmark is measured from its baseline. At `--text-m` this
      is 18px, comfortably over the pack's 12px floor for a bare mark. */
@@ -465,6 +487,17 @@ a.wordmark:hover {
 .action-lead:hover,
 .action-lead:focus-visible {
   text-decoration: underline;
+}
+
+/* Pressed, the plate gives a little, so a click is answered before the
+   next page arrives. Transform only, at the system's own duration and curve,
+   which `base.css` zeroes under reduced motion. */
+.action-lead {
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.action-lead:active {
+  transform: scale(0.97);
 }
 
 .status {
@@ -1572,6 +1605,7 @@ a.wordmark:hover {
 
 .part {
   cursor: pointer;
+  transition: transform var(--motion-fast) var(--motion-ease);
 }
 
 /* A part in a lane can be taken out, and the glyph is what says so. The
@@ -1584,6 +1618,12 @@ a.wordmark:hover {
 .part:hover,
 .part:focus-visible {
   border-color: var(--colour-text-muted);
+}
+
+/* The same answer to a press as the call to action: every part is a button
+   somebody clicks to change the lane. */
+.part:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .part-add {
@@ -1686,7 +1726,9 @@ a.wordmark:hover {
 
 @media (prefers-reduced-motion: no-preference) {
   .node {
-    transition: border-color 200ms ease, color 200ms ease;
+    transition:
+      border-color var(--motion-base) var(--motion-ease),
+      color var(--motion-base) var(--motion-ease);
   }
 }
 

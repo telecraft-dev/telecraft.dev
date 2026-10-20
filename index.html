@@ -5,6 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Telecraft: compose, apply and validate OpenTelemetry configuration</title>
 <meta name="description" content="Telecraft is how a platform team runs OpenTelemetry for everyone else. Teams build their own collector configuration from a library of parts you have already approved, Telecraft applies it to their collectors, and then checks what actually arrived in your backend.">
+<!-- How the page reads to a crawler and in a link preview. The documentation
+     pages carry the same set, written by `scripts/lib/layout.mjs`; change one
+     and change the other. Every address is absolute because these are only
+     valid that way, and the zero-CDN check allows this origin and no other. -->
+<link rel="canonical" href="https://telecraft.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Telecraft">
+<meta property="og:locale" content="en_GB">
+<meta property="og:title" content="Telecraft: compose, apply and validate OpenTelemetry configuration">
+<meta property="og:description" content="Telecraft is how a platform team runs OpenTelemetry for everyone else. Teams build their own collector configuration from a library of parts you have already approved, Telecraft applies it to their collectors, and then checks what actually arrived in your backend.">
+<meta property="og:url" content="https://telecraft.dev/">
+<meta property="og:image" content="https://telecraft.dev/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Telecraft: compose it, apply it, validate it.">
+<meta name="twitter:card" content="summary_large_image">
+<!-- The site's name and what it is, for the name a search result prints above
+     the link. A data block: nothing in it is executed or fetched. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://telecraft.dev/#website",
+      "name": "Telecraft",
+      "url": "https://telecraft.dev/",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://telecraft.dev/#organisation" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://telecraft.dev/#organisation",
+      "name": "Telecraft",
+      "url": "https://telecraft.dev/",
+      "logo": "https://telecraft.dev/icon-512.png",
+      "sameAs": ["https://github.com/telecraft-dev/telecraft"]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Telecraft",
+      "url": "https://telecraft.dev/",
+      "description": "Telecraft is how a platform team runs OpenTelemetry for everyone else. Teams build their own collector configuration from a library of parts you have already approved, Telecraft applies it to their collectors, and then checks what actually arrived in your backend.",
+      "applicationCategory": "DeveloperApplication",
+      "license": "https://github.com/telecraft-dev/telecraft/blob/main/LICENSE",
+      "softwareHelp": { "@type": "CreativeWork", "url": "https://telecraft.dev/docs/" },
+      "publisher": { "@id": "https://telecraft.dev/#organisation" }
+    }
+  ]
+}
+</script>
 <!-- The theme, resolved before the first paint. `tokens.css` carries dark on
      the bare :root so an unstamped document is still complete, which means a
      reader who chose light would otherwise see one dark frame. This is the
@@ -58,6 +109,7 @@
 <script src="/assets/pulse.js" defer></script>
 </head>
 <body>
+<a class="skip" href="#content">Skip to content</a>
 <!-- The chrome is shared with the documentation site, which generates its
      pages against exactly this shape: `.topbar` holding an `a.wordmark`, a
      `nav.topnav` and the theme control. Change it here and change it there. -->
@@ -101,7 +153,7 @@
   </fieldset>
 </header>
 
-<main>
+<main id="content">
   <!-- The blueprint sheet is confined to this section rather than tiled over
        the whole page: drafting linework is a drawing surface, and a page that
        keeps it under twelve hundred words of prose has turned it into

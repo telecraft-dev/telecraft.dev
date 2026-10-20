@@ -23,6 +23,7 @@ const TYPES = {
   '.ico': 'image/x-icon',
   '.json': 'application/json',
   '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 http
@@ -37,7 +38,14 @@ http
       target = path.join(target, 'index.html');
     }
     if (!fs.existsSync(target)) {
-      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Not found');
+      // What Pages does: the site's own 404.html, with a 404 status.
+      const missing = path.join(root, '404.html');
+      if (fs.existsSync(missing)) {
+        response.writeHead(404, { 'content-type': TYPES['.html'] });
+        fs.createReadStream(missing).pipe(response);
+      } else {
+        response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Not found');
+      }
       return;
     }
     response.writeHead(200, { 'content-type': TYPES[path.extname(target)] ?? 'application/octet-stream' });

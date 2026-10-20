@@ -114,10 +114,11 @@ body {
    it (identity.md). `site.css` sets the display size of this same class for
    the one page that is nothing but the mark; the two sheets never load
    together. */
+/* No `gap`: the bare text `craft` is a flex item of its own, so a gap split
+   the one word in two. The mark carries the space instead. */
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
   font-size: var(--text-m);
   font-weight: var(--weight-bold);
   letter-spacing: 0.14em;
@@ -129,6 +130,7 @@ body {
    minimum is 12px tall; `--text-m` clears both. */
 .wordmark-mark {
   flex: none;
+  margin-inline-end: var(--space-2);
   /* Taller than the caps beside it, because the mark is measured from its
      datum and the wordmark is measured from its baseline. At `--text-m` this
      is 18px, comfortably over the pack's 12px floor for a bare mark. */

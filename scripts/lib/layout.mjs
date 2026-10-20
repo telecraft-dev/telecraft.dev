@@ -23,6 +23,89 @@ export function escapeHtml(text) {
 }
 
 /**
+ * Where the site is served. Search engines and link previews only accept an
+ * absolute address for a canonical URL, an Open Graph image or a sitemap
+ * entry, so this is the one place the generator writes the origin down.
+ * `tools/check-external-assets.mjs` allows this origin and no other.
+ */
+export const SITE_ORIGIN = 'https://telecraft.dev';
+
+/** The card a link preview shows, 1200 by 630. Drawn by `tools/social-card.html`. */
+export const SOCIAL_IMAGE = `${SITE_ORIGIN}/og-image.png`;
+const SOCIAL_IMAGE_ALT = 'Telecraft: compose it, apply it, validate it.';
+
+/**
+ * The address a page is published at, as a search engine should index it.
+ * A directory index is named by its directory, because that is the form the
+ * landing page links to (`/docs/`) and one page with two addresses is two
+ * pages to a crawler.
+ */
+export function canonicalUrl(output) {
+  return `${SITE_ORIGIN}/${output.replace(/(^|\/)index\.html$/, '$1')}`;
+}
+
+/**
+ * The head lines that describe a page to a crawler and to a link preview,
+ * shared with the landing page, which carries the same set by hand.
+ */
+function describeHead({ output, title, description, breadcrumbs }) {
+  const url = canonicalUrl(output);
+  const lines = [
+    `<link rel="canonical" href="${escapeHtml(url)}">`,
+    `<meta property="og:type" content="website">`,
+    `<meta property="og:site_name" content="Telecraft">`,
+    `<meta property="og:locale" content="en_GB">`,
+    `<meta property="og:title" content="${escapeHtml(title)}">`,
+    description ? `<meta property="og:description" content="${escapeHtml(description)}">` : null,
+    `<meta property="og:url" content="${escapeHtml(url)}">`,
+    `<meta property="og:image" content="${SOCIAL_IMAGE}">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image:alt" content="${escapeHtml(SOCIAL_IMAGE_ALT)}">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
+  ].filter(Boolean);
+
+  // A trail of at least two steps is worth stating; the documentation home on
+  // its own is not a trail. `<` is escaped so no title can close the block.
+  if (breadcrumbs.length >= 2) {
+    const data = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: crumb.name,
+        item: canonicalUrl(crumb.output),
+      })),
+    };
+    lines.push(`<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Documentation, then the page's section, then the page, each one a page the
+ * site actually publishes. A step whose page does not exist is left out
+ * rather than pointed somewhere else.
+ */
+function breadcrumbsFor({ model, output, title, docsHomeOutput }) {
+  const trail = [{ name: 'Documentation', output: docsHomeOutput }];
+  if (output === docsHomeOutput) return trail;
+  const section = model.sections.find(
+    (candidate) =>
+      candidate.index?.output === output ||
+      candidate.generatedIndex?.output === output ||
+      candidate.pages.some((page) => page.output === output),
+  );
+  const sectionOutput = section ? (section.index?.output ?? section.generatedIndex?.output) : null;
+  if (section && sectionOutput && sectionOutput !== output) {
+    trail.push({ name: section.title, output: sectionOutput });
+  }
+  trail.push({ name: title, output });
+  return trail;
+}
+
+/**
  * Everything in the head that is the same on every page of the site,
  * documentation or not.
  *
@@ -143,6 +226,7 @@ export function renderPage({
   const docsHomeOutput = docsHome ? docsHome.output : `${model.basePath.slice(1)}/index.html`;
 
   const sidebar = renderSidebar({ model, output, current, docsHomeOutput });
+  const breadcrumbs = breadcrumbsFor({ model, output, title, docsHomeOutput });
   const toc = renderToc(headings);
 
   const repo = String(model.site.repository ?? '').replace(/\/+$/, '');
@@ -158,7 +242,8 @@ export function renderPage({
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title === siteTitle ? title : `${title} · ${siteTitle}`)}</title>
-${description ? `<meta name="description" content="${escapeHtml(description)}">\n` : ''}${SHARED_HEAD}
+${description ? `<meta name="description" content="${escapeHtml(description)}">\n` : ''}${describeHead({ output, title, description, breadcrumbs })}
+${SHARED_HEAD}
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>

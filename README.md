@@ -29,6 +29,10 @@ here: change `nav.yaml` and the site changes.
 | Path | What |
 |---|---|
 | `index.html` | The landing page. Content and structure |
+| `404.html` | The page Pages serves for any address the site does not have |
+| `robots.txt` | Allows every crawler and names the sitemap the build writes |
+| `og-image.png` | The card a link preview shows, 1200 by 630 |
+| `google7049fba5ad0480df.html`, `BingSiteAuth.xml` | Ownership proofs for Google Search Console and Bing Webmaster Tools. Keep both: each service checks again later |
 | `assets/site.css` | The landing page's structure |
 | `assets/docs.css` | The documentation pages' structure |
 | `assets/theme.js` | The theme resolver, after the first paint |
@@ -45,6 +49,7 @@ here: change `nav.yaml` and the site changes.
 | `tools/vendor.mjs` | Fetch the vendored files, and prove they have not drifted |
 | `tools/check-external-assets.mjs` | Nothing the browser fetches comes from another origin |
 | `tools/check-dashes.mjs` | No dash is used as punctuation, anywhere in the repository |
+| `tools/social-card.html` | The source of `og-image.png`, and how to redraw it |
 
 `assets/site.css` and `assets/docs.css` are the two stylesheets here that
 are ours to edit. Both are structure over the vendored element layer, and
@@ -88,6 +93,26 @@ produce a warning rather than a failure, so a documentation change still
 in review cannot take the site down. Run the build with `--strict` to
 turn those warnings into errors. A missing `nav.yaml` warns too, and
 publishes the landing page alone rather than nothing.
+
+## What search engines read
+
+- **`sitemap.xml`** is written by the build and lists the landing page and
+  every documentation page, each by the address its own canonical link names.
+  A directory index is named by its directory (`/docs/`, not
+  `/docs/index.html`), because that is the form the site links to.
+- **Every page carries a canonical link and Open Graph tags.** The landing
+  page carries them by hand; `scripts/lib/layout.mjs` writes them for the
+  documentation, with a breadcrumb trail as structured data. The landing page
+  also states the site's name as structured data, which is the name a search
+  result prints above the link.
+- **`robots.txt`** allows everything and names the sitemap. Cloudflare adds
+  its own content-signal block in front of it on the way out.
+- **The two verification files** are served byte for byte at the root. They
+  are how Google Search Console and Bing Webmaster Tools know the site is
+  ours, and both check again later, so neither may be removed.
+
+`SITE_FILES` in `scripts/build.mjs` names every one of these files, and the
+build serves nothing it does not name.
 
 ## Both pages are the same site
 
@@ -136,7 +161,11 @@ branch is meant to differ from `main`. **Point `ref` at `main` and rerun
   CDN, no hosted stylesheet, no analytics tag. `tools/check-external-assets.mjs`
   fails on any external sub-resource; a hyperlink is not a sub-resource, so
   `<a href>` may point wherever it likes. It runs over the source tree in CI
-  and over `_site/` at the end of every build.
+  and over `_site/` at the end of every build. Two things are not another
+  origin and pass: `https://telecraft.dev/` itself, because a canonical link,
+  an Open Graph image and a sitemap entry are only valid as absolute
+  addresses, and the body of a `<script type="application/ld+json">`, which
+  is data a browser never runs or fetches from.
 - **Every colour is defined in exactly two blocks, never inside a media query**
   (ADR-0047 §2). That is a property of `tokens.css`, which is not edited here.
   A colour invented in `site.css` or `docs.css` would break it, so neither
